@@ -1,18 +1,14 @@
 # -*- coding: utf-8 -*-
-
-
+"""Module containing classes to implementing and navigating data structures from Autodesk Forge BIM360 platform."""
 from ForgeFolders import FoldersApi
 
 
 class FolderTree():
-    """
-    This class sets up a simple folder tree with children and parent folders linked to the BIM360 API.
-    """
+    """This class sets up a simple folder tree with children and parent folders linked to the BIM360 API."""
 
     def __init__(self, folder, parent=None, children=None):
         """
-        Initializes a FolderTree instance with a given BIM360 Api folder object and potentially attaches the parent and the folders
-        children.
+        Initialize a FolderTree instance with a given BIM360 Api folder object and potentially attaches the parent and the folders children.
 
         Args:
             :folder (dict(JsonApiObject)): The BIM360 Api folder object this instance is linked to in the form of a dict.
@@ -24,10 +20,7 @@ class FolderTree():
 
         Returns:
             :None.
-
         """
-
-
         if folder is not None:
             self.folder = folder
         else:
@@ -53,7 +46,6 @@ class FolderTree():
             :children_folders (list(dict(JsonApiObject))): Children folders of this FolderTree instance in the form of a list of dicts
             containing JsonApiObjects.
         """
-
         if token is None:
             raise ValueError("Please give a authorization token.")
 
@@ -76,7 +68,7 @@ class FolderTree():
 
     def populate(self, token, project_id):
         """
-        This method populates this FolderTree instance recursively down all of its' children in the Autodesk BIM360 folder structure.
+        Populate this FolderTree instance recursively down all of its' children in the Autodesk BIM360 folder structure.
 
         Args:
             :token (str): Authentication token for Autodesk Forge API.
@@ -84,9 +76,7 @@ class FolderTree():
 
         Returns:
             :None.
-
         """
-
         children_list = self.get_children(token, project_id)
 
         for child in children_list:
@@ -97,8 +87,7 @@ class FolderTree():
 
     def search_tree(self, folder_name):
         """
-        This method allows the user to search the for the FolderTree instance with the given name in this FolderTree's children,
-        recursively.
+        Search the for the FolderTree instance with the given name in this FolderTree's children, recursively.
 
         Args:
             folder_name (str): The name of the Autodesk BIM360 folder to be searched for.
@@ -107,7 +96,6 @@ class FolderTree():
             FolderTree: FolderTree instance with the given name.
 
         """
-
         folder_tree = None
 
         for child in self.children:

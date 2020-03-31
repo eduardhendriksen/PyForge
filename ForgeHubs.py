@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
+"""Module containing classes related to hubs on the Autodesk Forge BIM360 platform."""
 import requests
 
 
 class HubsApi():
-    """
-    This class provides the base API calls for Autodesk BIM360 hubs.
-    """
+    """This class provides the base API calls for Autodesk BIM360 hubs."""
 
     def __init__(self, token=None):
         """
@@ -23,7 +21,7 @@ class HubsApi():
 
     def get_hubs(self, token=None, url=r'https://developer.api.autodesk.com/project/v1/hubs'):
         """
-        Sends a GET hubs request to the BIM360 API, returns the hubs available to the Autodesk account.
+        Send a GET hubs request to the BIM360 API, returns the hubs available to the Autodesk account.
 
         Args:
             :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
@@ -37,7 +35,6 @@ class HubsApi():
             :list(dict(JsonApiObject)): List of hub JsonApi objects in the form of dicts.
 
         """
-
         method = 'GET'
 
         if (self.token is None and token is None):

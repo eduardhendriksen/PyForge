@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
-
+"""Module containing classes related to item versions on the Autodesk Forge BIM360 platform."""
 import requests
 from urllib.parse import quote_plus
 
 
 class VersionsApi():
-    """
-    This class provides the base API calls for Autodesk BIM360 versions.
-    """
+    """This class provides the base API calls for Autodesk BIM360 versions."""
 
     def __init__(self, token=None):
         """
@@ -18,15 +16,13 @@ class VersionsApi():
 
         Returns:
             :None.
-
         """
         self.token = token
 
     def get_version(self, token, project_id, version_id,
                     url=r'https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id'):
         """
-        Sends a GET projects/:project_id/versions/:version_id request to the BIM360 API, returns the version corresponding to the version
-        id.
+        Send a GET projects/:project_id/versions/:version_id request to the BIM360 API, returns the version corresponding to the version id.
 
         Args:
             :token: Authentication token for Autodesk Forge API.
@@ -39,7 +35,6 @@ class VersionsApi():
             :dict(JsonApiObject): Version JsonApi object in the form of a dict.
 
         """
-
         if (self.token is None and token is None):
             raise ValueError("Please give a authorization token.")
 

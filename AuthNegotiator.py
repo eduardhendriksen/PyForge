@@ -1,12 +1,10 @@
 # -*- coding: utf-8 -*-
-
+"""Module containing classes related to authentication on the Autodesk Forge BIM360 platform."""
 import requests
 
 
 class OAuth2Negotiator():
-    """
-    Class to negotiate the authentication with the Autodesk Forge Api Authentication servers.
-    """
+    """Class to negotiate the authentication with the Autodesk Forge Api Authentication servers."""
 
     def __init__(self, webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None):
         """
@@ -27,7 +25,6 @@ class OAuth2Negotiator():
             :None.
 
         """
-
         self.webAddress = webAddress
         self.redirectAddress = redirectAddress
         self.clientId = clientId
@@ -52,14 +49,13 @@ class OAuth2Negotiator():
             :legs (int, optional): Indicates if 2- or 3-legged authentication is used. Defaults to 2.
 
         Raises:
-            :ConnectionError: DESCRIPTION.
+            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             :str: Autodesk Forge acces token.
             :int: Time in s that the token stays active.
 
         """
-
         if legs == 2:
 
             method = 'POST'
@@ -84,9 +80,7 @@ class OAuth2Negotiator():
                     raise ConnectionError("Connection to auth server not " +
                                           "made, please try again.")
                 else:
-                    raise ConnectionError("Request failed with " +
-                                          "code {}".format(resp.status_code) +
-                                          " and message :" +
-                                          "{}".format(resp.content))
+                    raise ConnectionError("Request failed with code {}".format(resp.status_code) +
+                                          " and message : {}".format(resp.content))
         else:
             pass
