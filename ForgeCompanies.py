@@ -11,10 +11,10 @@ class CompaniesApi():
         Initialize the CompaniesApi class and optionally attach an authentication token for the Autodesk Forge API.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
 
         Returns:
-            :None.
+            None.
 
         """
         self.token = token
@@ -25,20 +25,20 @@ class CompaniesApi():
         Send a GET accounts/:account_id/companies request to the BIM360 API, returns the companies available to the Autodesk account on the given account.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            :account_id (str, optional): The account id for the BIM360 account. Defaults to None.
-            :limit (int, optional): Size of the response array. Defaults to 100.
-            :offset (int, optional): Offset of the response array. Defaults to 0.
-            :sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
-            :field (list, optional): List of string field names to include in the response array. Defaults to [].
-            :url (str, optional):  url endpoint for the GET accounts/:account_id/companies request.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            account_id (str, optional): The account id for the BIM360 account. Defaults to None.
+            limit (int, optional): Size of the response array. Defaults to 100.
+            offset (int, optional): Offset of the response array. Defaults to 0.
+            sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
+            field (list, optional): List of string field names to include in the response array. Defaults to [].
+            url (str, optional):  url endpoint for the GET accounts/:account_id/companies request.
                 Currently default is pointed at the US BIM360 servers.
                 EMEA server:  https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/companies
                 Defaults to https://developer.api.autodesk.com/hq/v1/accounts/:account_id/companies.
 
         Raises:
-            :ValueError: If any of token and self.token, account_id are of NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If any of token and self.token, account_id are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             None.

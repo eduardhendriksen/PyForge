@@ -11,10 +11,10 @@ class HubsApi():
         Initialize the HubsApi class and optionally attach an authentication token for the Autodesk Forge API.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
 
         Returns:
-            :None.
+            None.
 
         """
         self.token = token
@@ -24,15 +24,15 @@ class HubsApi():
         Send a GET hubs request to the BIM360 API, returns the hubs available to the Autodesk account.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            :url (str, optional): Url endpoint for the GET hubs request. Defaults to r'https://developer.api.autodesk.com/project/v1/hubs'.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            url (str, optional): Url endpoint for the GET hubs request. Defaults to r'https://developer.api.autodesk.com/project/v1/hubs'.
 
         Raises:
-            :ValueError: If all of token and self.token are of NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If all of token and self.token are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            :list(dict(JsonApiObject)): List of hub JsonApi objects in the form of dicts.
+            list(dict(JsonApiObject)): List of hub JsonApi objects in the form of dicts.
 
         """
         method = 'GET'

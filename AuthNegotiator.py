@@ -11,18 +11,18 @@ class OAuth2Negotiator():
         Initialize the OAuth2Negotiator class and assign the needed parameters for authentication.
 
         Args:
-            :webAddress (str): Web address for the Autodesk Forge API authentication server.
-            :clientId (str): Client id for the Forge App this authentication is used for.
-            :clientSecret (str): Client secret for the Forge App this authentication is used for.
-            :scopes (list, str): API access scopes requested in the authentication.
-            :redirectAddress (str, optional): Redirect web address used for 3-legged authentication. Defaults to None.
-            :endAddress (str, optional): End web address to redirect to after 3-legged authentication has succeeded. Defaults to None.
+            webAddress (str): Web address for the Autodesk Forge API authentication server.
+            clientId (str): Client id for the Forge App this authentication is used for.
+            clientSecret (str): Client secret for the Forge App this authentication is used for.
+            scopes (list, str): API access scopes requested in the authentication.
+            redirectAddress (str, optional): Redirect web address used for 3-legged authentication. Defaults to None.
+            endAddress (str, optional): End web address to redirect to after 3-legged authentication has succeeded. Defaults to None.
 
         Raises:
-            :TypeError: If the type of the scopes argument is not list of str this error is raised.
+            TypeError: If the type of the scopes argument is not list of str this error is raised.
 
         Returns:
-            :None.
+            None.
 
         """
         self.webAddress = webAddress
@@ -46,14 +46,14 @@ class OAuth2Negotiator():
         Contact the Autodesk Forge API Authentication server and obtain an access token.
 
         Args:
-            :legs (int, optional): Indicates if 2- or 3-legged authentication is used. Defaults to 2.
+            legs (int, optional): Indicates if 2- or 3-legged authentication is used. Defaults to 2.
 
         Raises:
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            :str: Autodesk Forge acces token.
-            :int: Time in s that the token stays active.
+            str: Autodesk Forge acces token.
+            int: Time in s that the token stays active.
 
         """
         if legs == 2:

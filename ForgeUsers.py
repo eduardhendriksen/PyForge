@@ -11,10 +11,10 @@ class UsersApi():
         Initialize the UsersApi class and optionally attach an authentication token for the Autodesk Forge API.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
 
         Returns:
-            :None.
+            None.
 
         """
         self.token = token
@@ -26,21 +26,21 @@ class UsersApi():
         Send a GET projects/:projectId/users request to the BIM360 API, returns the users assigned to the project.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            :project_id (str, optional): The project id for the BIM360 project. Defaults to None.
-            :region (str, optional): The BIM360 server region to be adressed, can be US or EMEA. Defaults to US.
-            :accept_language (str, optional): The language in which the response is to be returned. Defaults to de.
-            :filters (dict, optional): A dict of filters in the form {filtertype : List(str filter entries)}. Defaults to {}.
-            :limit (int, optional): Size of the response array. Defaults to 100.
-            :offset (int, optional): Offset of the response array. Defaults to 0.
-            :sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
-            :fields (list, optional): List of string field names to include in the response array. Defaults to [].
-            :url (str, optional):  url endpoint for the GET projects/:projectId/users request.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            project_id (str, optional): The project id for the BIM360 project. Defaults to None.
+            region (str, optional): The BIM360 server region to be adressed, can be US or EMEA. Defaults to US.
+            accept_language (str, optional): The language in which the response is to be returned. Defaults to de.
+            filters (dict, optional): A dict of filters in the form {filtertype : List(str filter entries)}. Defaults to {}.
+            limit (int, optional): Size of the response array. Defaults to 100.
+            offset (int, optional): Offset of the response array. Defaults to 0.
+            sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
+            fields (list, optional): List of string field names to include in the response array. Defaults to [].
+            url (str, optional):  url endpoint for the GET projects/:projectId/users request.
                 Defaults to r'https://developer.api.autodesk.com/bim360/admin/v1/projects/:projectId/users'
 
         Raises:
-            :ValueError: If any of token and self.token, project_id are of NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If any of token and self.token, project_id are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             None.
@@ -114,14 +114,14 @@ class UsersApi():
         Create a filter query parameter of the given type with the given entries.
 
         Args:
-            :filters (dict, {str, filter_name : list(str, filter entires)}): The filters to be used.
+            filters (dict, {str, filter_name : list(str, filter entires)}): The filters to be used.
 
         Raises:
-            :ValueError: Raised if the filter entries exceed 255 characters.
-            :TypeError: Raised if the filters parameter is not of type dict.
+            ValueError: Raised if the filter entries exceed 255 characters.
+            TypeError: Raised if the filters parameter is not of type dict.
 
         Returns:
-            :dict: A filter dictionary to be used as a query parameter.
+            dict: A filter dictionary to be used as a query parameter.
         """
         if isinstance(filters, dict):
             if filters:

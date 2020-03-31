@@ -12,10 +12,10 @@ class FoldersApi():
         Initialize the FoldersApi class and optionally attach an authentication token for the Autodesk Forge API.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
 
         Returns:
-            :None.
+            None.
         """
         self.token = token
 
@@ -25,20 +25,20 @@ class FoldersApi():
         Send a GET projects/:project_id/folders/:folder_id/contents request to the BIM360 API, returns the folder contents available to the Autodesk account on the given hub.
 
         Args:
-            :token (str): Authentication token for Autodesk Forge API.
-            :project_id (str): The project id for the project the folder is in.
-            :folder_id (str): The folder id for the folder.
-            :type_filter (str, list): BIM360 item type or list of BIM360 item types to filter for.
-            :url (str): url endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
+            token (str): Authentication token for Autodesk Forge API.
+            project_id (str): The project id for the project the folder is in.
+            folder_id (str): The folder id for the folder.
+            type_filter (str, list): BIM360 item type or list of BIM360 item types to filter for.
+            url (str): url endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
                 Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents'.
 
         Raises:
-            :ValueError: If any of token and self.token, project_id or folder_id are NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            :list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
-            :list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
+            list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
+            list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
         """
         if (self.token is None and token is None):
             raise ValueError("Please give a authorization token.")
@@ -121,18 +121,18 @@ class FoldersApi():
         Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
 
         Args:
-            :token (str): Authentication token for Autodesk Forge API.
-            :project_id (str): The project id for the project the folder is in.
-            :folder_id (str): The folder id for the folder.
-            :url (str, optional): url endpoint for the GET projects/:project_id/folders/:folder_id request.
+            token (str): Authentication token for Autodesk Forge API.
+            project_id (str): The project id for the project the folder is in.
+            folder_id (str): The folder id for the folder.
+            url (str, optional): url endpoint for the GET projects/:project_id/folders/:folder_id request.
                 Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id'.
 
         Raises:
-            :ValueError: If any of token and self.token, project_id or folder_id are of NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If any of token and self.token, project_id or folder_id are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            :dict(JsonApiObject): JsonApi Folder object in the form of a dict.
+            dict(JsonApiObject): JsonApi Folder object in the form of a dict.
         """
         method = 'GET'
 
@@ -175,22 +175,22 @@ class FoldersApi():
         Send a GET projects/:project_id/folders/:folder_id/search request to the BIM360 API, recursively searching the folder and subfolders for the given search filter. Returns the search results data JsonApi Objects available to the user in the given search.
 
         Args:
-            :token (str): Authentication token for Autodesk Forge API. Must be 3-legged with data:search scope requested.
-            :project_id (str): The project id for the project the folder to be searched is in.
-            :folder_id (str): The folder id for the folder to be searched.
-            :search_filter (str, list): The filter(s) to search for.
-            :type_filter (str, list): Autodesk item type filter(s).
-            :url (TYPE, optional): Url endpoint for the GET projects/:project_id/folders/:folder_id request.
+            token (str): Authentication token for Autodesk Forge API. Must be 3-legged with data:search scope requested.
+            project_id (str): The project id for the project the folder to be searched is in.
+            folder_id (str): The folder id for the folder to be searched.
+            search_filter (str, list): The filter(s) to search for.
+            type_filter (str, list): Autodesk item type filter(s).
+            url (TYPE, optional): Url endpoint for the GET projects/:project_id/folders/:folder_id request.
                 Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id'.
 
         Raises:
-            :ValueError: If any of token and self.token, project_id or folder_id are NoneType.
-            :TypeError: If search filter is of NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+            TypeError: If search filter is of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            :list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
-            :list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
+            list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
+            list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
         """
         if (self.token is None and token is None):
             raise ValueError("Please give a authorization token.")
@@ -276,14 +276,14 @@ class FoldersApi():
         Create a filter query parameter of the given type with the given entries.
 
         Args:
-            :filter_entries (str, list): The entries to be filtered for.
-            :filter_type (str): The type of filter to be made.
+            filter_entries (str, list): The entries to be filtered for.
+            filter_type (str): The type of filter to be made.
 
         Raises:
-            :TypeError: Raised if the filter_entries parameter is not of type str or list.
+            TypeError: Raised if the filter_entries parameter is not of type str or list.
 
         Returns:
-            :dict: A filter dictionary to be used as a query parameter.
+            dict: A filter dictionary to be used as a query parameter.
 
         """
         if isinstance(filter_entries, list):

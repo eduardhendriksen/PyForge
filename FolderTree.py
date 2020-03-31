@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """Module containing classes to implementing and navigating data structures from Autodesk Forge BIM360 platform."""
-from ForgeFolders import FoldersApi
+from PyForge.ForgeFolders import FoldersApi
 
 
 class FolderTree():
@@ -11,15 +11,15 @@ class FolderTree():
         Initialize a FolderTree instance with a given BIM360 Api folder object and potentially attaches the parent and the folders children.
 
         Args:
-            :folder (dict(JsonApiObject)): The BIM360 Api folder object this instance is linked to in the form of a dict.
-            :parent (FolderTree, optional): The FolderTree object that is this instance's parent. Defaults to None.
-            :children (list(FolderTree), optional): List of FolderTree objects that are this instance's children. Defaults to None.
+            folder (dict(JsonApiObject)): The BIM360 Api folder object this instance is linked to in the form of a dict.
+            parent (FolderTree, optional): The FolderTree object that is this instance's parent. Defaults to None.
+            children (list(FolderTree), optional): List of FolderTree objects that are this instance's children. Defaults to None.
 
         Raises:
-            :ValueError: Raised if the given folder argument is of NoneType.
+            ValueError: Raised if the given folder argument is of NoneType.
 
         Returns:
-            :None.
+            None.
         """
         if folder is not None:
             self.folder = folder
@@ -36,14 +36,14 @@ class FolderTree():
         Get the children folder JsonApi objects of this FolderTree instance in the form of a list of dicts.
 
         Args:
-            :token (str): Authentication token for Autodesk Forge API.
-            :project_id (str): The project id for the project the folder is in.
+            token (str): Authentication token for Autodesk Forge API.
+            project_id (str): The project id for the project the folder is in.
 
         Raises:
-            :ValueError: Is raised if token or project_id are NoneType.
+            ValueError: Is raised if token or project_id are NoneType.
 
         Returns:
-            :children_folders (list(dict(JsonApiObject))): Children folders of this FolderTree instance in the form of a list of dicts
+            children_folders (list(dict(JsonApiObject))): Children folders of this FolderTree instance in the form of a list of dicts
             containing JsonApiObjects.
         """
         if token is None:
@@ -71,11 +71,11 @@ class FolderTree():
         Populate this FolderTree instance recursively down all of its' children in the Autodesk BIM360 folder structure.
 
         Args:
-            :token (str): Authentication token for Autodesk Forge API.
-            :project_id (str): The project id for the project the folder is in.
+            token (str): Authentication token for Autodesk Forge API.
+            project_id (str): The project id for the project the folder is in.
 
         Returns:
-            :None.
+            None.
         """
         children_list = self.get_children(token, project_id)
 

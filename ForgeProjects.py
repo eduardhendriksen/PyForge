@@ -11,10 +11,10 @@ class ProjectsApi():
         Initialize the ProjectsApi class and optionally attach an authentication token for the Autodesk Forge API.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
 
         Returns:
-            :None.
+            None.
 
         """
         self.token = token
@@ -25,20 +25,20 @@ class ProjectsApi():
         Send a GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            :account_id (str, optional): The account id for the BIM360 account. Defaults to None.
-            :limit (int, optional): Size of the response array. Defaults to 100.
-            :offset (int, optional): Offset of the response array. Defaults to 0.
-            :sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
-            :field (list, optional): List of string field names to include in the response array. Defaults to [].
-            :url (str, optional):  url endpoint for the GET accounts/:account_id/projects request.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            account_id (str, optional): The account id for the BIM360 account. Defaults to None.
+            limit (int, optional): Size of the response array. Defaults to 100.
+            offset (int, optional): Offset of the response array. Defaults to 0.
+            sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
+            field (list, optional): List of string field names to include in the response array. Defaults to [].
+            url (str, optional):  url endpoint for the GET accounts/:account_id/projects request.
                 Currently default is pointed at the US BIM360 servers.
                 EMEA server: https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/projects
                 Defaults to https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects.
 
         Raises:
-            :ValueError: If any of token and self.token, account_id are of NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If any of token and self.token, account_id are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             None.
@@ -101,17 +101,17 @@ class ProjectsApi():
         Send a GET hubs/:hub_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given hub.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            :hub_id (str, optional): The hub id for the hub. Defaults to None.
-            :url (str, optional): url endpoint for the GET hubs/:hub_id/projects request.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            hub_id (str, optional): The hub id for the hub. Defaults to None.
+            url (str, optional): url endpoint for the GET hubs/:hub_id/projects request.
                 Defaults to r'https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects'.
 
         Raises:
-            :ValueError: If any of token and self.token, hub_id are of NoneType.
-            :ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
+            ValueError: If any of token and self.token, hub_id are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            :list(dict(JsonApiObject)): List of project JsonApi objects in the form of dicts.
+            list(dict(JsonApiObject)): List of project JsonApi objects in the form of dicts.
         """
         if (self.token is None and token is None):
             raise ValueError("Please give a authorization token.")

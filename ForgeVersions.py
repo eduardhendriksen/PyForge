@@ -12,10 +12,10 @@ class VersionsApi():
         Initialize the VersionsApi class and optionally attach an authentication token for the Autodesk Forge API.
 
         Args:
-            :token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
 
         Returns:
-            :None.
+            None.
         """
         self.token = token
 
@@ -25,14 +25,14 @@ class VersionsApi():
         Send a GET projects/:project_id/versions/:version_id request to the BIM360 API, returns the version corresponding to the version id.
 
         Args:
-            :token: Authentication token for Autodesk Forge API.
-            :project_id: The project id for the project the folder is in.
-            :version_id (str): Version id of the version to be obtained
-            :url (str, optional): url endpoint for the GET projects/:project_id/versions/:version_id request.
+            token: Authentication token for Autodesk Forge API.
+            project_id: The project id for the project the folder is in.
+            version_id (str): Version id of the version to be obtained
+            url (str, optional): url endpoint for the GET projects/:project_id/versions/:version_id request.
             Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id'.
 
         Returns:
-            :dict(JsonApiObject): Version JsonApi object in the form of a dict.
+            dict(JsonApiObject): Version JsonApi object in the form of a dict.
 
         """
         if (self.token is None and token is None):
