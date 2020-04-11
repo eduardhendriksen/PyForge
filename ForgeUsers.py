@@ -76,11 +76,22 @@ class UsersApi():
             fields = ",".join(fields)
             params.update({'field' : fields})
 
-        resp = requests.request('GET',
-                                url,
-                                headers=headers,
-                                params=params,
-                                timeout=12)
+        outstanding = True
+        while outstanding:
+            try:
+                resp = requests.request('GET',
+                                        url,
+                                        headers=headers,
+                                        params=params,
+                                        timeout=2.5)
+                outstanding = False
+            except requests.exceptions.ReadTimeout:
+                resp = requests.request('GET',
+                                        url,
+                                        headers=headers,
+                                        params=params,
+                                        timeout=2.5)
+                outstanding = False
 
         if resp.status_code == 200:
             cont = resp.json()['results']
