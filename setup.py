@@ -10,7 +10,7 @@ setup(
   url = 'https://github.com/eduardhendriksen/PyForge',
   download_url = 'https://github.com/user/reponame/archive/master.tar.gz',
   keywords = ['Autodesk Forge', 'API', 'KEYWORDS'],
-  install_requires=[],
+  install_requires=['requests'],
   classifiers=[
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
