@@ -103,11 +103,22 @@ class UsersApi():
             fields = &#34;,&#34;.join(fields)
             params.update({&#39;field&#39; : fields})
 
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                headers=headers,
-                                params=params,
-                                timeout=12)
+        outstanding = True
+        while outstanding:
+            try:
+                resp = requests.request(&#39;GET&#39;,
+                                        url,
+                                        headers=headers,
+                                        params=params,
+                                        timeout=2.5)
+                outstanding = False
+            except requests.exceptions.ReadTimeout:
+                resp = requests.request(&#39;GET&#39;,
+                                        url,
+                                        headers=headers,
+                                        params=params,
+                                        timeout=2.5)
+                outstanding = False
 
         if resp.status_code == 200:
             cont = resp.json()[&#39;results&#39;]
@@ -263,11 +274,22 @@ class UsersApi():
             fields = &#34;,&#34;.join(fields)
             params.update({&#39;field&#39; : fields})
 
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                headers=headers,
-                                params=params,
-                                timeout=12)
+        outstanding = True
+        while outstanding:
+            try:
+                resp = requests.request(&#39;GET&#39;,
+                                        url,
+                                        headers=headers,
+                                        params=params,
+                                        timeout=2.5)
+                outstanding = False
+            except requests.exceptions.ReadTimeout:
+                resp = requests.request(&#39;GET&#39;,
+                                        url,
+                                        headers=headers,
+                                        params=params,
+                                        timeout=2.5)
+                outstanding = False
 
         if resp.status_code == 200:
             cont = resp.json()[&#39;results&#39;]
@@ -423,11 +445,22 @@ Defaults to r'https://developer.api.autodesk.com/bim360/admin/v1/projects/:proje
         fields = &#34;,&#34;.join(fields)
         params.update({&#39;field&#39; : fields})
 
-    resp = requests.request(&#39;GET&#39;,
-                            url,
-                            headers=headers,
-                            params=params,
-                            timeout=12)
+    outstanding = True
+    while outstanding:
+        try:
+            resp = requests.request(&#39;GET&#39;,
+                                    url,
+                                    headers=headers,
+                                    params=params,
+                                    timeout=2.5)
+            outstanding = False
+        except requests.exceptions.ReadTimeout:
+            resp = requests.request(&#39;GET&#39;,
+                                    url,
+                                    headers=headers,
+                                    params=params,
+                                    timeout=2.5)
+            outstanding = False
 
     if resp.status_code == 200:
         cont = resp.json()[&#39;results&#39;]

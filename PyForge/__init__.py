@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """Python tools to communicate with the Autodesk Forge Api."""
 
-from PyForge.AuthNegotiator import AuthNegotiator
+from PyForge.AuthNegotiator import OAuth2Negotiator
 from PyForge.FolderTree import FolderTree
 from PyForge.ForgeBusinessUnits import BusinessUnitsApi
 from PyForge.ForgeCompanies import CompaniesApi
