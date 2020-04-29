@@ -4,15 +4,15 @@
 # In[16]:
 
 
-"""Module containing classes related to folders on the Autodesk Forge BIM360 platform."""
+"""Module containing classes related to BIM 360 Document Management folder (POST), including details about the name and the status."""
 import re
 import requests
 
 
 class PostPermissionApi():
     
-    """This class provides the base API calls for Autodesk BIM360 folders permission.""" 
-    
+    """This class provides the base API calls permission for Autodesk BIM 360 Document Management folder.""" 
+     
     def __init__(self, token, subjectId, subjectType, actions):
         """
         Initialize the PostPermissionApi class and assign the needed parameters for authentication.
@@ -47,7 +47,8 @@ class PostPermissionApi():
     def get_folder_permission_batch_create(self, token, project_id, folder_id,
                    url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-create'):
         """
-        Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
+        Assign permissions to multiple users, roles, and companies for a BIM 360 Document Management folder.
+        Send a POST projects/:project_id/folders/:folder_id request to the BIM 360 Document Management folder, returns the results JsonApiObject available to the Autodesk account on the given project id for the given folder id .
         Args:
             token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
@@ -106,7 +107,8 @@ class PostPermissionApi():
     def get_folder_permission_batch_update(self, token, project_id, folder_id,
                    url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-update'):
         """
-        Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
+        Updates the permissions assigned to multiple users, roles, and companies for a folder. This endpoint replaces the permissions that were previously assigned to the user for this folder.
+        Send a POST bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-update request to the BIM 360 Document Management folder, returns the result updated JsonApiObject available to the Autodesk account on the given project id for the given folder id.
         Args:
             token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
@@ -166,7 +168,9 @@ class PostPermissionApi():
     def get_folder_permission_batch_delete(self, token, project_id, folder_id,
                    url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-delete'):
         """
-        Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
+        Deletes all the permissions assigned to specified users, roles, and companies. 
+        Note that you cannot delete permission for project admins, who are always assigned full permissions.
+        Send a POST bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-delete request to BIM 360 Document Management folder, returns No response!
         Args:
             token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
