@@ -1,10 +1,10 @@
 
 # coding: utf-8
 
-# In[49]:
+# In[30]:
 
 
-# -*- coding: utf-8 -*-
+
 """Module containing classes related to folders on the Autodesk Forge BIM360 platform."""
 import re
 import requests
@@ -16,10 +16,8 @@ class PermissionApi():
     def __init__(self, token=None):
         """
         Initialize the PermissionApi class and optionally attach an authentication token for the Autodesk Forge API.
-
         Args:
             token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-
         Returns:
             None.
         """
@@ -29,18 +27,15 @@ class PermissionApi():
                    url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions'):
         """
         Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
-
         Args:
             token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
             folder_id (str): The folder id for the folder.
             url (str, optional): url endpoint for the GET projects/:project_id/folders/:folder_id request.
                 Defaults to r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions'.
-
         Raises:
             ValueError: If any of token and self.token, project_id or folder_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
-
         Returns:
             dict(JsonApiObject): JsonApi Folder object in the form of a dict.
         """
@@ -80,6 +75,5 @@ class PermissionApi():
             raise ConnectionError("Renew authorization token.")
 
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
-                              " and message : {}".format(resp.content))
-
+                              " and message : {}".format(resp.content))        
 
