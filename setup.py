@@ -8,8 +8,8 @@ setup(
   author = 'Eduard Hendriksen',
   author_email = 'e.c.hendriksen@gmail.com',
   url = 'https://github.com/eduardhendriksen/PyForge',
-  download_url = 'https://github.com/user/reponame/archive/master.tar.gz',
-  keywords = ['Autodesk Forge', 'API', 'KEYWORDS'],
+  download_url = 'https://github.com/eduardhendriksen/PyForge/archive/master.tar.gz',
+  keywords = ['Autodesk Forge', 'API'],
   install_requires=['requests'],
   classifiers=[
     'Development Status :: 3 - Alpha',
@@ -20,7 +20,7 @@ setup(
     'Programming Language :: Python :: 3.4',
     'Programming Language :: Python :: 3.5',
     'Programming Language :: Python :: 3.6',
-	'Programming Language :: Python :: 3.7',
-	'Programming Language :: Python :: 3.8'
+	  'Programming Language :: Python :: 3.7',
+	  'Programming Language :: Python :: 3.8'
   ],
 )
