@@ -1,6 +1,6 @@
 from distutils.core import setup
 setup(
-  name = 'PyForge',
+  name = 'pyforge',
   packages = ['pyforge'],
   version = '0.2',
   license='MIT',
