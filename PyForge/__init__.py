@@ -11,3 +11,4 @@ from PyForge.ForgeModelDerivative import ModelDerivativeApi
 from PyForge.ForgeProjects import ProjectsApi
 from PyForge.ForgeUsers import UsersApi
 from PyForge.ForgeVersions import VersionsApi
+from PyForge.TimeoutHttpAdapter import TimeoutHttpAdapter

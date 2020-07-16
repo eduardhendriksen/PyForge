@@ -94,9 +94,7 @@ class FoldersApi():
                     included += cont['included']
                 except KeyError:
                     pass
-
                 try:
-
                     match = re.search(r'page%5Bnumber%5D=(\d+)', cont['links']['next']['href'])
 
                     if match is not None:

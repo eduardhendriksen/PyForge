@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'PyForge',
   packages = ['PyForge'],
-  version = '0.1',
+  version = '0.2',
   license='MIT',
   description = 'Python tools to communicate with the Autodesk Forge Api.',
   author = 'Eduard Hendriksen',
@@ -10,7 +10,7 @@ setup(
   url = 'https://github.com/eduardhendriksen/PyForge',
   download_url = 'https://github.com/eduardhendriksen/PyForge/archive/master.tar.gz',
   keywords = ['Autodesk Forge', 'API'],
-  install_requires=['requests'],
+  install_requires=['requests', 'requests-toolbelt'],
   classifiers=[
     'Development Status :: 3 - Alpha',
     'Intended Audience :: Developers',
