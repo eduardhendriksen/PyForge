@@ -10,7 +10,7 @@ from PyForge.TimeoutHttpAdapter import TimeoutHttpAdapter
 class ModelDerivativeApi():
     """This class provides the base API calls for Autodesk BIM360 model derivatives."""
 
-    def __init__(self, token, 
+    def __init__(self, token,
                  base_url=r'https://developer.api.autodesk.com/modelderivative/v2/designdata/',
                  timeout=1):
         """
@@ -18,7 +18,7 @@ class ModelDerivativeApi():
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            base_url (str, optional): Base URL for calls to the model derivative API. 
+            base_url (str, optional): Base URL for calls to the model derivative API.
                 Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
             timeout (float, optional): Default timeout for API calls. Defaults to 0.1.
 
@@ -179,7 +179,7 @@ class ModelDerivativeApi():
                               " and message : {}".format(resp.content) +
                               " for endpoint: {}".format(endpoint))
 
-    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', endpoint=r':urn/metadata/:guid'):
+    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', forceget='true', endpoint=r':urn/metadata/:guid'):
         """
         Send a GET :urn/metadata/:guid request to the BIM360 API, returns the object tree for the given metadata id (corresponding to a model view) for the model.
 
@@ -220,6 +220,12 @@ class ModelDerivativeApi():
         if x_ads_force in ['true', 'false']:
             headers.update({'x-ads-force' : x_ads_force})
 
+        params = {}
+
+        if forceget is not None:
+            if isinstance(forceget, str):
+                params.update({'forceget' : forceget})
+
         resp = self.http.get(endpoint, headers=headers)
 
         while resp.status_code == 202:
@@ -236,7 +242,7 @@ class ModelDerivativeApi():
                               " for endpoint: {}".format(endpoint))
 
     def get_object_properties(self, urn=None, guid=None, accept_encoding=None, x_ads_force='true',
-                              object_id=None, endpoint=r':urn/metadata/:guid/properties'):
+                              object_id=None, forceget='true', endpoint=r':urn/metadata/:guid/properties'):
         """
         Send a GET :urn/metadata/:guid/properties request to the BIM360 API, returns all object properties for the given metadata id (corresponding to a model view) for the model.
 
@@ -283,6 +289,9 @@ class ModelDerivativeApi():
         if object_id is not None:
             if isinstance(object_id, (int, str)):
                 params.update({'objectid' : object_id})
+        if forceget is not None:
+            if isinstance(forceget, str):
+                params.update({'forceget' : forceget})
 
         resp = self.http.get(endpoint, headers=headers, params=params)
 
