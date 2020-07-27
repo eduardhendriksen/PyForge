@@ -1,40 +1,41 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to companies on the Autodesk Forge BIM360 platform."""
-import requests
+from PyForge.ForgeApi import ForgeApi
 
 
-class CompaniesApi():
+class CompaniesApi(ForgeApi):
     """This class provides the base API calls for Autodesk BIM360 companies."""
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r'https://developer.api.autodesk.com/hq/v1/accounts/',
+                 timeout=1):
         """
-        Initialize the CompaniesApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the CompaniesApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the model derivative API.
+                Defaults to r'https://developer.api.autodesk.com/hq/v1/accounts/'
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
 
         """
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_account_companies(self, token=None, account_id=None, limit=100, offset=0, sort=[], field=[],
-                             url=r'https://developer.api.autodesk.com/hq/v1/accounts/:account_id/companies'):
+    def get_account_companies(self, account_id=None, limit=100, offset=0, sort=[], field=[],
+                              endpoint=r':account_id/companies'):
         """
         Send a GET accounts/:account_id/companies request to the BIM360 API, returns the companies available to the Autodesk account on the given account.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
             account_id (str, optional): The account id for the BIM360 account. Defaults to None.
             limit (int, optional): Size of the response array. Defaults to 100.
             offset (int, optional): Offset of the response array. Defaults to 0.
             sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
             field (list, optional): List of string field names to include in the response array. Defaults to [].
-            url (str, optional):  url endpoint for the GET accounts/:account_id/companies request.
-                Currently default is pointed at the US BIM360 servers.
-                EMEA server:  https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/companies
-                Defaults to https://developer.api.autodesk.com/hq/v1/accounts/:account_id/companies.
+            endpoint (str, optional):  endpoint for the GET accounts/:account_id/companies request. Defaults to: r':account_id/companies'
 
         Raises:
             ValueError: If any of token and self.token, account_id are of NoneType.
@@ -43,16 +44,19 @@ class CompaniesApi():
         Returns:
             None.
         """
-        if (self.token is None and token is None):
-            raise ValueError("Please give a authorization token.")
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError("Please initialise the CompaniesApi.")
 
         if account_id is None:
             raise ValueError("Please enter a account id.")
 
-        url = url.replace(':account_id', account_id)
+        endpoint = endpoint.replace(':account_id', account_id)
+
+        headers = {}
+
+        headers.update({'Authorization' : "Bearer {}".format(token)})
 
         params = {}
 
@@ -66,24 +70,19 @@ class CompaniesApi():
             field = ",".join(field)
             params.update({'field' : field})
 
-        resp = requests.request('GET',
-                                url,
-                                params=params,
-                                headers={'Authorization' : "Bearer {}".format(token)},
-                                timeout=12)
+        resp = self.http.get(endpoint, headers=headers, params=params)
 
         if resp.status_code == 200:
             cont = resp.json()
 
             if isinstance(cont, list):
                 if len(cont) == limit:
-                    cont += self.get_account_companies(token=token,
-                                                      account_id=account_id,
-                                                      limit=limit,
-                                                      offset=offset+limit,
-                                                      sort=sort,
-                                                      field=field,
-                                                      url=url)
+                    cont += self.get_account_companies(account_id=account_id,
+                                                       limit=limit,
+                                                       offset=offset+limit,
+                                                       sort=sort,
+                                                       field=field,
+                                                       url=url)
 
                 return cont
             else:
@@ -93,4 +92,5 @@ class CompaniesApi():
             raise ConnectionError("Renew authorization token.")
 
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
-                              " and message : {}".format(resp.content))
+                              " and message : {}".format(resp.content) +
+                              " for endpoint: {}".format(endpoint))

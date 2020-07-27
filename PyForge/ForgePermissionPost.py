@@ -1,28 +1,23 @@
-
-# coding: utf-8
-
-# In[16]:
-
-
+# -*- coding: utf-8 -*-
 """Module containing classes related to BIM 360 Document Management folder (POST), including details about the name and the status."""
 import re
 import requests
 
 
 class PostPermissionApi():
-    
-    """This class provides the base API calls permission for Autodesk BIM 360 Document Management folder.""" 
-     
+
+    """This class provides the base API calls permission for Autodesk BIM 360 Document Management folder."""
+
     def __init__(self, token, subjectId, subjectType, actions):
         """
         Initialize the PostPermissionApi class and assign the needed parameters for authentication.
 
         Args:
-            
+
             subjectId (str): subjectId of the user, role, or company.
             subjectType (str): The type of subject. Possible values: USER, COMPANY, ROLE
-            actions (list, str): Permitted actions for the user, role, or company. 
-                                The six permission levels in BIM 360 Document Managment correspond to one or more actions.            
+            actions (list, str): Permitted actions for the user, role, or company.
+                                The six permission levels in BIM 360 Document Managment correspond to one or more actions.
         Raises:
             TypeError: If the type of the actions argument is not list of str this error is raised.
 
@@ -32,7 +27,7 @@ class PostPermissionApi():
         """
         self.token = token
         self.subjectId = subjectId
-        self.subjectType = subjectType        
+        self.subjectType = subjectType
 
         if type(actions) == list:
             self.actions = ''
@@ -43,7 +38,7 @@ class PostPermissionApi():
         else:
             raise TypeError(actions)
 
-    
+
     def get_folder_permission_batch_create(self, token, project_id, folder_id,
                    url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-create'):
         """
@@ -78,7 +73,7 @@ class PostPermissionApi():
         if folder_id is None:
             raise ValueError("Please enter a folder id.")
 
-        headers = {'Authorization' : "Bearer {}".format(token), 
+        headers = {'Authorization' : "Bearer {}".format(token),
                    'Content-Type' : 'application/json'}
         url = url.replace(':project_id', project_id).replace(':folder_id', folder_id)
         data = { 'subjectId' : self.subjectId,
@@ -94,7 +89,7 @@ class PostPermissionApi():
         if resp.status_code == 200:
             cont = resp.json()
             return cont
-        
+
         if resp.status_code == 400:
             raise ConnectionError(resp.content)
 
@@ -138,7 +133,7 @@ class PostPermissionApi():
         if folder_id is None:
             raise ValueError("Please enter a folder id.")
 
-        headers = {'Authorization' : "Bearer {}".format(token), 
+        headers = {'Authorization' : "Bearer {}".format(token),
                    'Content-Type' : 'application/json'}
         url = url.replace(':project_id', project_id).replace(':folder_id', folder_id)
         data = { 'subjectId' : self.subjectId,
@@ -154,7 +149,7 @@ class PostPermissionApi():
         if resp.status_code == 200:
             cont = resp.json()
             return cont
-        
+
         if resp.status_code == 400:
             raise ConnectionError(resp.content)
 
@@ -163,12 +158,12 @@ class PostPermissionApi():
 
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
                               " and message : {}".format(resp.content))
-        
-    
+
+
     def get_folder_permission_batch_delete(self, token, project_id, folder_id,
                    url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-delete'):
         """
-        Deletes all the permissions assigned to specified users, roles, and companies. 
+        Deletes all the permissions assigned to specified users, roles, and companies.
         Note that you cannot delete permission for project admins, who are always assigned full permissions.
         Send a POST bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions:batch-delete request to BIM 360 Document Management folder, returns No response!
         Args:
@@ -200,7 +195,7 @@ class PostPermissionApi():
         if folder_id is None:
             raise ValueError("Please enter a folder id.")
 
-        headers = {'Authorization' : "Bearer {}".format(token), 
+        headers = {'Authorization' : "Bearer {}".format(token),
                    'Content-Type' : 'application/json'}
         url = url.replace(':project_id', project_id).replace(':folder_id', folder_id)
         data = { 'subjectId' : self.subjectId,
@@ -215,7 +210,7 @@ class PostPermissionApi():
         if resp.status_code == 200:
             cont = resp.json()
             return cont
-        
+
         if resp.status_code == 400:
             raise ConnectionError(resp.content)
 

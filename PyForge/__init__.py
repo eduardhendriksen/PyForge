@@ -3,6 +3,7 @@
 
 from PyForge.AuthNegotiator import OAuth2Negotiator
 from PyForge.FolderTree import FolderTree
+from PyForge.ForgeApi import ForgeApi
 from PyForge.ForgeBusinessUnits import BusinessUnitsApi
 from PyForge.ForgeCompanies import CompaniesApi
 from PyForge.ForgeFolders import FoldersApi

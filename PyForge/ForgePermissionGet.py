@@ -1,10 +1,4 @@
-
-# coding: utf-8
-
-# In[30]:
-
-
-
+# -*- coding: utf-8 -*-
 """Module containing classes related to folders on the Autodesk Forge BIM360 platform."""
 import re
 import requests
@@ -67,7 +61,7 @@ class PermissionApi():
         if resp.status_code == 200:
             cont = resp.json()
             return cont
-        
+
         if resp.status_code == 400:
             raise ConnectionError(resp.content)
 
@@ -75,5 +69,5 @@ class PermissionApi():
             raise ConnectionError("Renew authorization token.")
 
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
-                              " and message : {}".format(resp.content))        
+                              " and message : {}".format(resp.content))
 

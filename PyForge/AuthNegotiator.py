@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to authentication on the Autodesk Forge BIM360 platform."""
 import requests
+from PyForge.ForgeApi import ForgeApi
 
-
-class OAuth2Negotiator():
+class OAuth2Negotiator(ForgeApi):
     """Class to negotiate the authentication with the Autodesk Forge Api Authentication servers."""
 
-    def __init__(self, webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None):
+    def __init__(self, webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None, timeout=1):
         """
         Initialize the OAuth2Negotiator class and assign the needed parameters for authentication.
 
@@ -17,6 +17,7 @@ class OAuth2Negotiator():
             scopes (list, str): API access scopes requested in the authentication.
             redirectAddress (str, optional): Redirect web address used for 3-legged authentication. Defaults to None.
             endAddress (str, optional): End web address to redirect to after 3-legged authentication has succeeded. Defaults to None.
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Raises:
             TypeError: If the type of the scopes argument is not list of str this error is raised.
@@ -40,6 +41,8 @@ class OAuth2Negotiator():
             raise TypeError(scopes)
 
         self.endAddress = endAddress
+
+        super().__init__(self, base_url=base_url, timeout=timeout)
 
     def get_token(self, legs=2):
         """
@@ -65,12 +68,7 @@ class OAuth2Negotiator():
                        'grant_type' : 'client_credentials',
                        'scope' : self.scopes }
 
-
-            resp = requests.request(method ,
-                                    self.webAddress,
-                                    headers=headers,
-                                    data=data,
-                                    timeout=12)
+            resp = self.http.post(self.webAddress, headers=headers, data=data)
 
             if resp.status_code == 200:
                 cont = resp.json()
@@ -83,4 +81,4 @@ class OAuth2Negotiator():
                     raise ConnectionError("Request failed with code {}".format(resp.status_code) +
                                           " and message : {}".format(resp.content))
         else:
-            pass
+            raise NotImplementedError("3-legged authentication has not been implemented.")

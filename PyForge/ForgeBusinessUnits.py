@@ -1,63 +1,60 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to business units on the Autodesk Forge BIM360 platform."""
 import requests
+from PyForge.ForgeApi import ForgeApi
 
 
-class BusinessUnitsApi():
+class BusinessUnitsApi(ForgeApi):
     """This class provides the base API calls for Autodesk BIM360 business units."""
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r'https://developer.api.autodesk.com/hq/v1/accounts/',
+                 timeout=1):
         """
-        Initialize the BusinessUnitsApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the BusinessUnitsApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the model derivative API.
+                Defaults to r'https://developer.api.autodesk.com/hq/v1/accounts/'
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
 
         """
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_account_business_units(self, token=None, account_id=None,
-                             url=r' https://developer.api.autodesk.com/hq/v1/accounts/:account_id/business_units_structure'):
+    def get_account_business_units(self, account_id=None, endpoint=r':account_id/business_units_structure'):
         """
         Send a GET accounts/:account_id/business_units_structure request to the BIM360 API, returns the business units available to the Autodesk account on the given account.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
             account_id (str, optional): The account id for the BIM360 account. Defaults to None.
-            limit (int, optional): Size of the response array. Defaults to 100.
-            offset (int, optional): Offset of the response array. Defaults to 0.
-            sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
-            field (list, optional): List of string field names to include in the response array. Defaults to [].
-            url (str, optional):  url endpoint for the GET accounts/:account_id/business units request.
-                Currently default is pointed at the US BIM360 servers.
-                EMEA server:   https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/business_units_structure
-                Defaults to  https://developer.api.autodesk.com/hq/v1/accounts/:account_id/business_units_structure.
+            endpoint (str, optional): url endpoint for the GET accounts/:account_id/business_units_structure request. Defaults to r':account_id/business_units_structure'.
 
         Raises:
-            ValueError: If any of token and self.token, account_id are of NoneType.
+            ValueError: If self.token, account_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             None.
         """
-        if (self.token is None and token is None):
-            raise ValueError("Please give a authorization token.")
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError("Please initialise the BusinessUnitsApi.")
 
         if account_id is None:
             raise ValueError("Please enter a account id.")
 
-        url = url.replace(':account_id', account_id)
+        endpoint = endpoint.replace(':account_id', account_id)
 
-        resp = requests.request('GET',
-                                url,
-                                headers={'Authorization' : "Bearer {}".format(token)},
-                                timeout=12)
+        headers = {}
+
+        headers.update({'Authorization' : "Bearer {}".format(token)})
+
+        resp = self.http.get(endpoint, headers=headers)
 
         if resp.status_code == 200:
 
@@ -69,4 +66,5 @@ class BusinessUnitsApi():
             raise ConnectionError("Renew authorization token.")
 
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
-                              " and message : {}".format(resp.content))
+                              " and message : {}".format(resp.content) +
+                              " for endpoint: {}".format(endpoint))

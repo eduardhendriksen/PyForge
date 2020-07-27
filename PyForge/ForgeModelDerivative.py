@@ -1,38 +1,30 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to deriving model data from the Autodesk Forge BIM360 platform."""
-import requests
-from urllib3.util.retry import Retry
-from requests_toolbelt import sessions
-import base64
+from PyForge.ForgeApi import ForgeApi
 from urllib.parse import quote_plus
-from PyForge.TimeoutHttpAdapter import TimeoutHttpAdapter
+import base64
 
-class ModelDerivativeApi():
+
+class ModelDerivativeApi(ForgeApi):
     """This class provides the base API calls for Autodesk BIM360 model derivatives."""
 
     def __init__(self, token,
                  base_url=r'https://developer.api.autodesk.com/modelderivative/v2/designdata/',
                  timeout=1):
         """
-        Initialize the ModelDerivativeApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the ModelDerivativeApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
             base_url (str, optional): Base URL for calls to the model derivative API.
                 Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
-            timeout (float, optional): Default timeout for API calls. Defaults to 0.1.
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
 
         """
-        self.token = token
-        self.http = sessions.BaseUrlSession(base_url)
-        self.http.hooks['response'] = [lambda response, *args, **kwargs: response.raise_for_status()]
-        retries = Retry(total=6, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-        adapter = TimeoutHttpAdapter(timeout=timeout, max_retries=retries)
-        self.http.mount("https://", adapter)
-        self.http.mount("http://", adapter)
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
     def get_manifest(self, urn=None, accept_encoding=None, endpoint=r':urn/manifest'):
         """
@@ -41,7 +33,7 @@ class ModelDerivativeApi():
         Args:
             urn (str, optional): The urn for the BIM360 model. Defaults to None.
             accept_encoding (str, optional): Specifies if the results may be compressed (allowed: gzip or *). Defaults to None.
-            endpoint (str, optional):  endpoint for the GET :urn/metadata. Defaults to r':urn/manifest'
+            endpoint (str, optional): endpoint for the GET :urn/metadata. Defaults to r':urn/manifest'
 
         Raises:
             ValueError: If any of token and self.token, urn are of NoneType.

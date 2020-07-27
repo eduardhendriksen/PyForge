@@ -2,7 +2,7 @@ from distutils.core import setup
 setup(
   name = 'PyForge',
   packages = ['PyForge'],
-  version = '0.2.1',
+  version = '0.2.2',
   license='MIT',
   description = 'Python tools to communicate with the Autodesk Forge Api.',
   author = 'Eduard Hendriksen',
