@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Module containing classes related to folders on the Autodesk Forge BIM360 platform."""
+"""Module containing classes related to permissions on the Autodesk Forge BIM360 platform."""
 import re
 from PyForge.ForgeApi import ForgeApi
 
