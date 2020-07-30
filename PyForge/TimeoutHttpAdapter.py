@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Module containing the timeout http adapter for the PyForge package."""
-from PyForge.ForgeApi import ForgeApi
 from requests.adapters import HTTPAdapter
 
 DEFAULT_TIMEOUT = 0.5 # seconds
