@@ -30,50 +30,53 @@
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;Module containing classes related to folders on the Autodesk Forge BIM360 platform.&#34;&#34;&#34;
 import re
-import requests
+from PyForge.ForgeApi import ForgeApi
 
 
-class FoldersApi():
+class FoldersApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 folders.&#34;&#34;&#34;
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;,
+                 timeout=1):
         &#34;&#34;&#34;
-        Initialize the FoldersApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the FoldersApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the folders API.
+                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
         &#34;&#34;&#34;
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_folder_contents(self, token=None, project_id=None, folder_id=None, type_filter=None,
-                            url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents&#39;):
+    def get_folder_contents(self, project_id=None, folder_id=None, type_filter=None,
+                            endpoint=r&#39;:project_id/folders/:folder_id/contents&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/folders/:folder_id/contents request to the BIM360 API, returns the folder contents available to the Autodesk account on the given hub.
 
         Args:
-            token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
             folder_id (str): The folder id for the folder.
             type_filter (str, list): BIM360 item type or list of BIM360 item types to filter for.
-            url (str): url endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
-                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents&#39;.
+            endpoint (str): endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
+                Defaults to r&#39;:project_id/folders/:folder_id/contents&#39;.
 
         Raises:
-            ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+            ValueError: If any of self.token, project_id or folder_id are NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
             list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -84,7 +87,12 @@ class FoldersApi():
         if folder_id is None:
             raise ValueError(&#34;Please enter a folder id.&#34;)
 
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+
+        headers = {}
+
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
         params = {}
 
         if type_filter is not None:
@@ -100,19 +108,11 @@ class FoldersApi():
 
                 params.update({&#39;page[number]&#39; : str(next_page)})
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, headers=headers, params=params)
 
             else:
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, headers=headers, params=params)
 
             if resp.status_code == 200:
 
@@ -140,10 +140,10 @@ class FoldersApi():
                     raise ConnectionError(&#34;Renew authorization token.&#34;)
 
                 raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                      &#34; and message :{}&#34;.format(resp.content))
+                                      &#34; and message : {}&#34;.format(resp.content) +
+                                      &#34; for endpoint: {}&#34;.format(endpoint))
 
-    def get_folder(self, token, project_id, folder_id,
-                   url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;):
+    def get_folder(self, project_id, folder_id, endpoint=r&#39;:project_id/folders/:folder_id&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
 
@@ -151,23 +151,20 @@ class FoldersApi():
             token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
             folder_id (str): The folder id for the folder.
-            url (str, optional): url endpoint for the GET projects/:project_id/folders/:folder_id request.
-                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;.
+            endpoint (str, optional): endpoint for the GET projects/:project_id/folders/:folder_id request.
+                Defaults to r&#39;:project_id/folders/:folder_id&#39;.
 
         Raises:
-            ValueError: If any of token and self.token, project_id or folder_id are of NoneType.
+            ValueError: If any of self.token, project_id or folder_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             dict(JsonApiObject): JsonApi Folder object in the form of a dict.
         &#34;&#34;&#34;
-        method = &#39;GET&#39;
-
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -179,12 +176,9 @@ class FoldersApi():
             raise ValueError(&#34;Please enter a folder id.&#34;)
 
         headers = {&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)}
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
 
-        resp = requests.request(method,
-                                url,
-                                headers=headers,
-                                timeout=12)
+        resp = self.http.get(endpoint, headers=headers)
 
         if resp.status_code == 200:
             cont = resp.json()
@@ -194,24 +188,24 @@ class FoldersApi():
             raise ConnectionError(&#34;Renew authorization token.&#34;)
 
         raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                              &#34; and message : {}&#34;.format(resp.content))
+                              &#34; and message : {}&#34;.format(resp.content) +
+                              &#34; for endpoint: {}&#34;.format(endpoint))
 
-    def search_folder(self, token, project_id, folder_id, search_filter, type_filter,
-                      url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;):
+    def search_folder(self, project_id, folder_id, search_filter, type_filter,
+                      endpoint=r&#39;:project_id/folders/:folder_id&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/folders/:folder_id/search request to the BIM360 API, recursively searching the folder and subfolders for the given search filter. Returns the search results data JsonApi Objects available to the user in the given search.
 
         Args:
-            token (str): Authentication token for Autodesk Forge API. Must be 3-legged with data:search scope requested.
             project_id (str): The project id for the project the folder to be searched is in.
             folder_id (str): The folder id for the folder to be searched.
             search_filter (str, list): The filter(s) to search for.
             type_filter (str, list): Autodesk item type filter(s).
-            url (TYPE, optional): Url endpoint for the GET projects/:project_id/folders/:folder_id request.
-                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;.
+            endpoint (TYPE, optional): endpoint for the GET projects/:project_id/folders/:folder_id request.
+                Defaults to r&#39;:project_id/folders/:folder_id&#39;.
 
         Raises:
-            ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+            ValueError: If any of self.token, project_id or folder_id are NoneType.
             TypeError: If search filter is of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
@@ -219,11 +213,10 @@ class FoldersApi():
             list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
             list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -234,7 +227,11 @@ class FoldersApi():
         if folder_id is None:
             raise ValueError(&#34;Please enter a folder id.&#34;)
 
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+
+        headers = {}
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
         params = {}
 
         if search_filter is not None:
@@ -255,19 +252,11 @@ class FoldersApi():
 
                 params.update({&#39;next[page]&#39; : str(next_page)})
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, params=params, headers=headers)
 
             else:
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, params=params, headers=headers)
 
             if resp.status_code == 200:
 
@@ -296,7 +285,8 @@ class FoldersApi():
                     raise ConnectionError(&#34;Renew authorization token.&#34;)
 
                 raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                      &#34; and message :{}&#34;.format(resp.content))
+                                      &#34; and message : {}&#34;.format(resp.content) +
+                                      &#34; for endpoint: {}&#34;.format(endpoint))
 
     def make_filter_param(self, filter_entries, filter_type):
         &#34;&#34;&#34;
@@ -333,15 +323,20 @@ class FoldersApi():
 <dl>
 <dt id="PyForge.ForgeFolders.FoldersApi"><code class="flex name class">
 <span>class <span class="ident">FoldersApi</span></span>
-<span>(</span><span>token=None)</span>
+<span>(</span><span>token, base_url='https://developer.api.autodesk.com/data/v1/projects/', timeout=1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class provides the base API calls for Autodesk BIM360 folders.</p>
-<p>Initialize the FoldersApi class and optionally attach an authentication token for the Autodesk Forge API.</p>
+<p>Initialize the FoldersApi class and attach an authentication token for the Autodesk Forge API.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>token</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Authentication token for Autodesk Forge API. Defaults to None.</dd>
+<dt><strong><code>token</code></strong> :&ensp;<code>str</code></dt>
+<dd>Authentication token for Autodesk Forge API.</dd>
+<dt><strong><code>base_url</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Base URL for calls to the folders API.
+Defaults to r'https://developer.api.autodesk.com/data/v1/projects/'</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Default timeout for API calls. Defaults to 1.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>None.</p></div>
@@ -349,47 +344,50 @@ class FoldersApi():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class FoldersApi():
+<pre><code class="python">class FoldersApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 folders.&#34;&#34;&#34;
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;,
+                 timeout=1):
         &#34;&#34;&#34;
-        Initialize the FoldersApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the FoldersApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the folders API.
+                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
         &#34;&#34;&#34;
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_folder_contents(self, token=None, project_id=None, folder_id=None, type_filter=None,
-                            url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents&#39;):
+    def get_folder_contents(self, project_id=None, folder_id=None, type_filter=None,
+                            endpoint=r&#39;:project_id/folders/:folder_id/contents&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/folders/:folder_id/contents request to the BIM360 API, returns the folder contents available to the Autodesk account on the given hub.
 
         Args:
-            token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
             folder_id (str): The folder id for the folder.
             type_filter (str, list): BIM360 item type or list of BIM360 item types to filter for.
-            url (str): url endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
-                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents&#39;.
+            endpoint (str): endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
+                Defaults to r&#39;:project_id/folders/:folder_id/contents&#39;.
 
         Raises:
-            ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+            ValueError: If any of self.token, project_id or folder_id are NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
             list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -400,7 +398,12 @@ class FoldersApi():
         if folder_id is None:
             raise ValueError(&#34;Please enter a folder id.&#34;)
 
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+
+        headers = {}
+
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
         params = {}
 
         if type_filter is not None:
@@ -416,19 +419,11 @@ class FoldersApi():
 
                 params.update({&#39;page[number]&#39; : str(next_page)})
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, headers=headers, params=params)
 
             else:
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, headers=headers, params=params)
 
             if resp.status_code == 200:
 
@@ -456,10 +451,10 @@ class FoldersApi():
                     raise ConnectionError(&#34;Renew authorization token.&#34;)
 
                 raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                      &#34; and message :{}&#34;.format(resp.content))
+                                      &#34; and message : {}&#34;.format(resp.content) +
+                                      &#34; for endpoint: {}&#34;.format(endpoint))
 
-    def get_folder(self, token, project_id, folder_id,
-                   url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;):
+    def get_folder(self, project_id, folder_id, endpoint=r&#39;:project_id/folders/:folder_id&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
 
@@ -467,23 +462,20 @@ class FoldersApi():
             token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
             folder_id (str): The folder id for the folder.
-            url (str, optional): url endpoint for the GET projects/:project_id/folders/:folder_id request.
-                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;.
+            endpoint (str, optional): endpoint for the GET projects/:project_id/folders/:folder_id request.
+                Defaults to r&#39;:project_id/folders/:folder_id&#39;.
 
         Raises:
-            ValueError: If any of token and self.token, project_id or folder_id are of NoneType.
+            ValueError: If any of self.token, project_id or folder_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             dict(JsonApiObject): JsonApi Folder object in the form of a dict.
         &#34;&#34;&#34;
-        method = &#39;GET&#39;
-
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -495,12 +487,9 @@ class FoldersApi():
             raise ValueError(&#34;Please enter a folder id.&#34;)
 
         headers = {&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)}
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
 
-        resp = requests.request(method,
-                                url,
-                                headers=headers,
-                                timeout=12)
+        resp = self.http.get(endpoint, headers=headers)
 
         if resp.status_code == 200:
             cont = resp.json()
@@ -510,24 +499,24 @@ class FoldersApi():
             raise ConnectionError(&#34;Renew authorization token.&#34;)
 
         raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                              &#34; and message : {}&#34;.format(resp.content))
+                              &#34; and message : {}&#34;.format(resp.content) +
+                              &#34; for endpoint: {}&#34;.format(endpoint))
 
-    def search_folder(self, token, project_id, folder_id, search_filter, type_filter,
-                      url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;):
+    def search_folder(self, project_id, folder_id, search_filter, type_filter,
+                      endpoint=r&#39;:project_id/folders/:folder_id&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/folders/:folder_id/search request to the BIM360 API, recursively searching the folder and subfolders for the given search filter. Returns the search results data JsonApi Objects available to the user in the given search.
 
         Args:
-            token (str): Authentication token for Autodesk Forge API. Must be 3-legged with data:search scope requested.
             project_id (str): The project id for the project the folder to be searched is in.
             folder_id (str): The folder id for the folder to be searched.
             search_filter (str, list): The filter(s) to search for.
             type_filter (str, list): Autodesk item type filter(s).
-            url (TYPE, optional): Url endpoint for the GET projects/:project_id/folders/:folder_id request.
-                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;.
+            endpoint (TYPE, optional): endpoint for the GET projects/:project_id/folders/:folder_id request.
+                Defaults to r&#39;:project_id/folders/:folder_id&#39;.
 
         Raises:
-            ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+            ValueError: If any of self.token, project_id or folder_id are NoneType.
             TypeError: If search filter is of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
@@ -535,11 +524,10 @@ class FoldersApi():
             list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
             list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -550,7 +538,11 @@ class FoldersApi():
         if folder_id is None:
             raise ValueError(&#34;Please enter a folder id.&#34;)
 
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+
+        headers = {}
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
         params = {}
 
         if search_filter is not None:
@@ -571,19 +563,11 @@ class FoldersApi():
 
                 params.update({&#39;next[page]&#39; : str(next_page)})
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, params=params, headers=headers)
 
             else:
 
-                resp = requests.request(&#39;GET&#39;,
-                                        url,
-                                        params=params,
-                                        headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                        timeout=12)
+                resp = self.http.get(endpoint, params=params, headers=headers)
 
             if resp.status_code == 200:
 
@@ -612,7 +596,8 @@ class FoldersApi():
                     raise ConnectionError(&#34;Renew authorization token.&#34;)
 
                 raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                      &#34; and message :{}&#34;.format(resp.content))
+                                      &#34; and message : {}&#34;.format(resp.content) +
+                                      &#34; for endpoint: {}&#34;.format(endpoint))
 
     def make_filter_param(self, filter_entries, filter_type):
         &#34;&#34;&#34;
@@ -637,10 +622,14 @@ class FoldersApi():
 
         raise TypeError(&#34;filter_entries parameter has the wrong type: {}&#34;.format(type(filter_entries)))</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="PyForge.ForgeApi.ForgeApi" href="ForgeApi.html#PyForge.ForgeApi.ForgeApi">ForgeApi</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="PyForge.ForgeFolders.FoldersApi.get_folder"><code class="name flex">
-<span>def <span class="ident">get_folder</span></span>(<span>self, token, project_id, folder_id, url='https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id')</span>
+<span>def <span class="ident">get_folder</span></span>(<span>self, project_id, folder_id, endpoint=':project_id/folders/:folder_id')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.</p>
@@ -652,14 +641,14 @@ class FoldersApi():
 <dd>The project id for the project the folder is in.</dd>
 <dt><strong><code>folder_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The folder id for the folder.</dd>
-<dt><strong><code>url</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>url endpoint for the GET projects/:project_id/folders/:folder_id request.
-Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id'.</dd>
+<dt><strong><code>endpoint</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>endpoint for the GET projects/:project_id/folders/:folder_id request.
+Defaults to r':project_id/folders/:folder_id'.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If any of token and self.token, project_id or folder_id are of NoneType.</dd>
+<dd>If any of self.token, project_id or folder_id are of NoneType.</dd>
 <dt><code>ConnectionError</code></dt>
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
@@ -669,8 +658,7 @@ Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/fo
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_folder(self, token, project_id, folder_id,
-               url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;):
+<pre><code class="python">def get_folder(self, project_id, folder_id, endpoint=r&#39;:project_id/folders/:folder_id&#39;):
     &#34;&#34;&#34;
     Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
 
@@ -678,23 +666,20 @@ Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/fo
         token (str): Authentication token for Autodesk Forge API.
         project_id (str): The project id for the project the folder is in.
         folder_id (str): The folder id for the folder.
-        url (str, optional): url endpoint for the GET projects/:project_id/folders/:folder_id request.
-            Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;.
+        endpoint (str, optional): endpoint for the GET projects/:project_id/folders/:folder_id request.
+            Defaults to r&#39;:project_id/folders/:folder_id&#39;.
 
     Raises:
-        ValueError: If any of token and self.token, project_id or folder_id are of NoneType.
+        ValueError: If any of self.token, project_id or folder_id are of NoneType.
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
         dict(JsonApiObject): JsonApi Folder object in the form of a dict.
     &#34;&#34;&#34;
-    method = &#39;GET&#39;
-
-    if (self.token is None and token is None):
-        raise ValueError(&#34;Please give a authorization token.&#34;)
-
-    if self.token is not None:
+    try:
         token = self.token
+    except AttributeError:
+        raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
     if project_id is None:
         raise ValueError(&#34;Please enter a project id.&#34;)
@@ -706,12 +691,9 @@ Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/fo
         raise ValueError(&#34;Please enter a folder id.&#34;)
 
     headers = {&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)}
-    url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+    endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
 
-    resp = requests.request(method,
-                            url,
-                            headers=headers,
-                            timeout=12)
+    resp = self.http.get(endpoint, headers=headers)
 
     if resp.status_code == 200:
         cont = resp.json()
@@ -721,32 +703,31 @@ Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/fo
         raise ConnectionError(&#34;Renew authorization token.&#34;)
 
     raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                          &#34; and message : {}&#34;.format(resp.content))</code></pre>
+                          &#34; and message : {}&#34;.format(resp.content) +
+                          &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
 </dd>
 <dt id="PyForge.ForgeFolders.FoldersApi.get_folder_contents"><code class="name flex">
-<span>def <span class="ident">get_folder_contents</span></span>(<span>self, token=None, project_id=None, folder_id=None, type_filter=None, url='https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents')</span>
+<span>def <span class="ident">get_folder_contents</span></span>(<span>self, project_id=None, folder_id=None, type_filter=None, endpoint=':project_id/folders/:folder_id/contents')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a GET projects/:project_id/folders/:folder_id/contents request to the BIM360 API, returns the folder contents available to the Autodesk account on the given hub.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>token</code></strong> :&ensp;<code>str</code></dt>
-<dd>Authentication token for Autodesk Forge API.</dd>
 <dt><strong><code>project_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The project id for the project the folder is in.</dd>
 <dt><strong><code>folder_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The folder id for the folder.</dd>
 <dt><strong><code>type_filter</code></strong> :&ensp;<code>str, list</code></dt>
 <dd>BIM360 item type or list of BIM360 item types to filter for.</dd>
-<dt><strong><code>url</code></strong> :&ensp;<code>str</code></dt>
-<dd>url endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
-Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents'.</dd>
+<dt><strong><code>endpoint</code></strong> :&ensp;<code>str</code></dt>
+<dd>endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
+Defaults to r':project_id/folders/:folder_id/contents'.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If any of token and self.token, project_id or folder_id are NoneType.</dd>
+<dd>If any of self.token, project_id or folder_id are NoneType.</dd>
 <dt><code>ConnectionError</code></dt>
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
@@ -757,32 +738,30 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_folder_contents(self, token=None, project_id=None, folder_id=None, type_filter=None,
-                        url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents&#39;):
+<pre><code class="python">def get_folder_contents(self, project_id=None, folder_id=None, type_filter=None,
+                        endpoint=r&#39;:project_id/folders/:folder_id/contents&#39;):
     &#34;&#34;&#34;
     Send a GET projects/:project_id/folders/:folder_id/contents request to the BIM360 API, returns the folder contents available to the Autodesk account on the given hub.
 
     Args:
-        token (str): Authentication token for Autodesk Forge API.
         project_id (str): The project id for the project the folder is in.
         folder_id (str): The folder id for the folder.
         type_filter (str, list): BIM360 item type or list of BIM360 item types to filter for.
-        url (str): url endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
-            Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id/contents&#39;.
+        endpoint (str): endpoint for the GET projects/:project_id/folders/:folder_id/contents request.
+            Defaults to r&#39;:project_id/folders/:folder_id/contents&#39;.
 
     Raises:
-        ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+        ValueError: If any of self.token, project_id or folder_id are NoneType.
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
         list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
         list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
     &#34;&#34;&#34;
-    if (self.token is None and token is None):
-        raise ValueError(&#34;Please give a authorization token.&#34;)
-
-    if self.token is not None:
+    try:
         token = self.token
+    except AttributeError:
+        raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
     if project_id is None:
         raise ValueError(&#34;Please enter a project id.&#34;)
@@ -793,7 +772,12 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
     if folder_id is None:
         raise ValueError(&#34;Please enter a folder id.&#34;)
 
-    url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+    endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+
+    headers = {}
+
+    headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
     params = {}
 
     if type_filter is not None:
@@ -809,19 +793,11 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
 
             params.update({&#39;page[number]&#39; : str(next_page)})
 
-            resp = requests.request(&#39;GET&#39;,
-                                    url,
-                                    params=params,
-                                    headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                    timeout=12)
+            resp = self.http.get(endpoint, headers=headers, params=params)
 
         else:
 
-            resp = requests.request(&#39;GET&#39;,
-                                    url,
-                                    params=params,
-                                    headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                    timeout=12)
+            resp = self.http.get(endpoint, headers=headers, params=params)
 
         if resp.status_code == 200:
 
@@ -849,7 +825,8 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
                 raise ConnectionError(&#34;Renew authorization token.&#34;)
 
             raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                  &#34; and message :{}&#34;.format(resp.content))</code></pre>
+                                  &#34; and message : {}&#34;.format(resp.content) +
+                                  &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
 </dd>
 <dt id="PyForge.ForgeFolders.FoldersApi.make_filter_param"><code class="name flex">
@@ -903,14 +880,12 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
 </details>
 </dd>
 <dt id="PyForge.ForgeFolders.FoldersApi.search_folder"><code class="name flex">
-<span>def <span class="ident">search_folder</span></span>(<span>self, token, project_id, folder_id, search_filter, type_filter, url='https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id')</span>
+<span>def <span class="ident">search_folder</span></span>(<span>self, project_id, folder_id, search_filter, type_filter, endpoint=':project_id/folders/:folder_id')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a GET projects/:project_id/folders/:folder_id/search request to the BIM360 API, recursively searching the folder and subfolders for the given search filter. Returns the search results data JsonApi Objects available to the user in the given search.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>token</code></strong> :&ensp;<code>str</code></dt>
-<dd>Authentication token for Autodesk Forge API. Must be 3-legged with data:search scope requested.</dd>
 <dt><strong><code>project_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>The project id for the project the folder to be searched is in.</dd>
 <dt><strong><code>folder_id</code></strong> :&ensp;<code>str</code></dt>
@@ -919,14 +894,14 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
 <dd>The filter(s) to search for.</dd>
 <dt><strong><code>type_filter</code></strong> :&ensp;<code>str, list</code></dt>
 <dd>Autodesk item type filter(s).</dd>
-<dt><strong><code>url</code></strong> :&ensp;<code>TYPE</code>, optional</dt>
-<dd>Url endpoint for the GET projects/:project_id/folders/:folder_id request.
-Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id'.</dd>
+<dt><strong><code>endpoint</code></strong> :&ensp;<code>TYPE</code>, optional</dt>
+<dd>endpoint for the GET projects/:project_id/folders/:folder_id request.
+Defaults to r':project_id/folders/:folder_id'.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If any of token and self.token, project_id or folder_id are NoneType.</dd>
+<dd>If any of self.token, project_id or folder_id are NoneType.</dd>
 <dt><code>TypeError</code></dt>
 <dd>If search filter is of NoneType.</dd>
 <dt><code>ConnectionError</code></dt>
@@ -939,22 +914,21 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def search_folder(self, token, project_id, folder_id, search_filter, type_filter,
-                  url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;):
+<pre><code class="python">def search_folder(self, project_id, folder_id, search_filter, type_filter,
+                  endpoint=r&#39;:project_id/folders/:folder_id&#39;):
     &#34;&#34;&#34;
     Send a GET projects/:project_id/folders/:folder_id/search request to the BIM360 API, recursively searching the folder and subfolders for the given search filter. Returns the search results data JsonApi Objects available to the user in the given search.
 
     Args:
-        token (str): Authentication token for Autodesk Forge API. Must be 3-legged with data:search scope requested.
         project_id (str): The project id for the project the folder to be searched is in.
         folder_id (str): The folder id for the folder to be searched.
         search_filter (str, list): The filter(s) to search for.
         type_filter (str, list): Autodesk item type filter(s).
-        url (TYPE, optional): Url endpoint for the GET projects/:project_id/folders/:folder_id request.
-            Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/folders/:folder_id&#39;.
+        endpoint (TYPE, optional): endpoint for the GET projects/:project_id/folders/:folder_id request.
+            Defaults to r&#39;:project_id/folders/:folder_id&#39;.
 
     Raises:
-        ValueError: If any of token and self.token, project_id or folder_id are NoneType.
+        ValueError: If any of self.token, project_id or folder_id are NoneType.
         TypeError: If search filter is of NoneType.
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
@@ -962,11 +936,10 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
         list(dict(JsonApiObject)): List of JsonApi Data objects in the form of dicts.
         list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
     &#34;&#34;&#34;
-    if (self.token is None and token is None):
-        raise ValueError(&#34;Please give a authorization token.&#34;)
-
-    if self.token is not None:
+    try:
         token = self.token
+    except AttributeError:
+        raise ValueError(&#34;Please initialise the FoldersApi.&#34;)
 
     if project_id is None:
         raise ValueError(&#34;Please enter a project id.&#34;)
@@ -977,7 +950,11 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
     if folder_id is None:
         raise ValueError(&#34;Please enter a folder id.&#34;)
 
-    url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+    endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:folder_id&#39;, folder_id)
+
+    headers = {}
+    headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
     params = {}
 
     if search_filter is not None:
@@ -998,19 +975,11 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
 
             params.update({&#39;next[page]&#39; : str(next_page)})
 
-            resp = requests.request(&#39;GET&#39;,
-                                    url,
-                                    params=params,
-                                    headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                    timeout=12)
+            resp = self.http.get(endpoint, params=params, headers=headers)
 
         else:
 
-            resp = requests.request(&#39;GET&#39;,
-                                    url,
-                                    params=params,
-                                    headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                    timeout=12)
+            resp = self.http.get(endpoint, params=params, headers=headers)
 
         if resp.status_code == 200:
 
@@ -1039,7 +1008,8 @@ list(dict(JsonApiObject)): List of JsonApi Version objects in the form of dicts.
                 raise ConnectionError(&#34;Renew authorization token.&#34;)
 
             raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                  &#34; and message :{}&#34;.format(resp.content))</code></pre>
+                                  &#34; and message : {}&#34;.format(resp.content) +
+                                  &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
 </dd>
 </dl>

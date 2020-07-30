@@ -29,39 +29,31 @@
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;Module containing classes related to deriving model data from the Autodesk Forge BIM360 platform.&#34;&#34;&#34;
-import requests
-from urllib3.util.retry import Retry
-from requests_toolbelt import sessions
-import base64
+from PyForge.ForgeApi import ForgeApi
 from urllib.parse import quote_plus
-from PyForge.TimeoutHttpAdapter import TimeoutHttpAdapter
+import base64
 
-class ModelDerivativeApi():
+
+class ModelDerivativeApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 model derivatives.&#34;&#34;&#34;
 
-    def __init__(self, token, 
+    def __init__(self, token,
                  base_url=r&#39;https://developer.api.autodesk.com/modelderivative/v2/designdata/&#39;,
                  timeout=1):
         &#34;&#34;&#34;
-        Initialize the ModelDerivativeApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the ModelDerivativeApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            base_url (str, optional): Base URL for calls to the model derivative API. 
+            base_url (str, optional): Base URL for calls to the model derivative API.
                 Defaults to r&#39;https://developer.api.autodesk.com/modelderivative/v2/designdata/&#39;
-            timeout (float, optional): Default timeout for API calls. Defaults to 0.1.
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
 
         &#34;&#34;&#34;
-        self.token = token
-        self.http = sessions.BaseUrlSession(base_url)
-        self.http.hooks[&#39;response&#39;] = [lambda response, *args, **kwargs: response.raise_for_status()]
-        retries = Retry(total=6, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-        adapter = TimeoutHttpAdapter(timeout=timeout, max_retries=retries)
-        self.http.mount(&#34;https://&#34;, adapter)
-        self.http.mount(&#34;http://&#34;, adapter)
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
     def get_manifest(self, urn=None, accept_encoding=None, endpoint=r&#39;:urn/manifest&#39;):
         &#34;&#34;&#34;
@@ -70,14 +62,14 @@ class ModelDerivativeApi():
         Args:
             urn (str, optional): The urn for the BIM360 model. Defaults to None.
             accept_encoding (str, optional): Specifies if the results may be compressed (allowed: gzip or *). Defaults to None.
-            endpoint (str, optional):  endpoint for the GET :urn/metadata. Defaults to r&#39;:urn/manifest&#39;
+            endpoint (str, optional): endpoint for the GET :urn/metadata. Defaults to r&#39;:urn/manifest&#39;
 
         Raises:
-            ValueError: If any of token and self.token, urn are of NoneType.
+            ValueError: If self.token, urn are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Manifest JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -126,7 +118,7 @@ class ModelDerivativeApi():
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            Response object with partial chunked body containing the requested derivative.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -175,7 +167,7 @@ class ModelDerivativeApi():
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Metadata JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -208,7 +200,8 @@ class ModelDerivativeApi():
                               &#34; and message : {}&#34;.format(resp.content) +
                               &#34; for endpoint: {}&#34;.format(endpoint))
 
-    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;, endpoint=r&#39;:urn/metadata/:guid&#39;):
+    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;, forceget=&#39;true&#39;,
+                        endpoint=r&#39;:urn/metadata/:guid&#39;):
         &#34;&#34;&#34;
         Send a GET :urn/metadata/:guid request to the BIM360 API, returns the object tree for the given metadata id (corresponding to a model view) for the model.
 
@@ -220,11 +213,11 @@ class ModelDerivativeApi():
             endpoint (str, optional): Endpoint for the GET :urn/metadata/:guid. Defaults to r&#39;:urn/metadata/:guid&#39;
 
         Raises:
-            ValueError: If any of token and self.token, urn and guid are of NoneType.
+            ValueError: If any of self.token, urn and guid are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Object tree JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -249,6 +242,12 @@ class ModelDerivativeApi():
         if x_ads_force in [&#39;true&#39;, &#39;false&#39;]:
             headers.update({&#39;x-ads-force&#39; : x_ads_force})
 
+        params = {}
+
+        if forceget is not None:
+            if isinstance(forceget, str):
+                params.update({&#39;forceget&#39; : forceget})
+
         resp = self.http.get(endpoint, headers=headers)
 
         while resp.status_code == 202:
@@ -265,7 +264,7 @@ class ModelDerivativeApi():
                               &#34; for endpoint: {}&#34;.format(endpoint))
 
     def get_object_properties(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;,
-                              object_id=None, endpoint=r&#39;:urn/metadata/:guid/properties&#39;):
+                              object_id=None, forceget=&#39;true&#39;, endpoint=r&#39;:urn/metadata/:guid/properties&#39;):
         &#34;&#34;&#34;
         Send a GET :urn/metadata/:guid/properties request to the BIM360 API, returns all object properties for the given metadata id (corresponding to a model view) for the model.
 
@@ -282,7 +281,7 @@ class ModelDerivativeApi():
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Properties JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -312,6 +311,9 @@ class ModelDerivativeApi():
         if object_id is not None:
             if isinstance(object_id, (int, str)):
                 params.update({&#39;objectid&#39; : object_id})
+        if forceget is not None:
+            if isinstance(forceget, str):
+                params.update({&#39;forceget&#39; : forceget})
 
         resp = self.http.get(endpoint, headers=headers, params=params)
 
@@ -344,7 +346,7 @@ class ModelDerivativeApi():
 </code></dt>
 <dd>
 <div class="desc"><p>This class provides the base API calls for Autodesk BIM360 model derivatives.</p>
-<p>Initialize the ModelDerivativeApi class and optionally attach an authentication token for the Autodesk Forge API.</p>
+<p>Initialize the ModelDerivativeApi class and attach an authentication token for the Autodesk Forge API.</p>
 <h2 id="args">Args</h2>
 <dl>
 <dt><strong><code>token</code></strong> :&ensp;<code>str</code></dt>
@@ -353,7 +355,7 @@ class ModelDerivativeApi():
 <dd>Base URL for calls to the model derivative API.
 Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'</dd>
 <dt><strong><code>timeout</code></strong> :&ensp;<code>float</code>, optional</dt>
-<dd>Default timeout for API calls. Defaults to 0.1.</dd>
+<dd>Default timeout for API calls. Defaults to 1.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>None.</p></div>
@@ -361,32 +363,26 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ModelDerivativeApi():
+<pre><code class="python">class ModelDerivativeApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 model derivatives.&#34;&#34;&#34;
 
-    def __init__(self, token, 
+    def __init__(self, token,
                  base_url=r&#39;https://developer.api.autodesk.com/modelderivative/v2/designdata/&#39;,
                  timeout=1):
         &#34;&#34;&#34;
-        Initialize the ModelDerivativeApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the ModelDerivativeApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            base_url (str, optional): Base URL for calls to the model derivative API. 
+            base_url (str, optional): Base URL for calls to the model derivative API.
                 Defaults to r&#39;https://developer.api.autodesk.com/modelderivative/v2/designdata/&#39;
-            timeout (float, optional): Default timeout for API calls. Defaults to 0.1.
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
 
         &#34;&#34;&#34;
-        self.token = token
-        self.http = sessions.BaseUrlSession(base_url)
-        self.http.hooks[&#39;response&#39;] = [lambda response, *args, **kwargs: response.raise_for_status()]
-        retries = Retry(total=6, backoff_factor=1, status_forcelist=[429, 500, 502, 503, 504])
-        adapter = TimeoutHttpAdapter(timeout=timeout, max_retries=retries)
-        self.http.mount(&#34;https://&#34;, adapter)
-        self.http.mount(&#34;http://&#34;, adapter)
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
     def get_manifest(self, urn=None, accept_encoding=None, endpoint=r&#39;:urn/manifest&#39;):
         &#34;&#34;&#34;
@@ -395,14 +391,14 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
         Args:
             urn (str, optional): The urn for the BIM360 model. Defaults to None.
             accept_encoding (str, optional): Specifies if the results may be compressed (allowed: gzip or *). Defaults to None.
-            endpoint (str, optional):  endpoint for the GET :urn/metadata. Defaults to r&#39;:urn/manifest&#39;
+            endpoint (str, optional): endpoint for the GET :urn/metadata. Defaults to r&#39;:urn/manifest&#39;
 
         Raises:
-            ValueError: If any of token and self.token, urn are of NoneType.
+            ValueError: If self.token, urn are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Manifest JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -451,7 +447,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            Response object with partial chunked body containing the requested derivative.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -500,7 +496,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Metadata JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -533,7 +529,8 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
                               &#34; and message : {}&#34;.format(resp.content) +
                               &#34; for endpoint: {}&#34;.format(endpoint))
 
-    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;, endpoint=r&#39;:urn/metadata/:guid&#39;):
+    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;, forceget=&#39;true&#39;,
+                        endpoint=r&#39;:urn/metadata/:guid&#39;):
         &#34;&#34;&#34;
         Send a GET :urn/metadata/:guid request to the BIM360 API, returns the object tree for the given metadata id (corresponding to a model view) for the model.
 
@@ -545,11 +542,11 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
             endpoint (str, optional): Endpoint for the GET :urn/metadata/:guid. Defaults to r&#39;:urn/metadata/:guid&#39;
 
         Raises:
-            ValueError: If any of token and self.token, urn and guid are of NoneType.
+            ValueError: If any of self.token, urn and guid are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Object tree JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -574,6 +571,12 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
         if x_ads_force in [&#39;true&#39;, &#39;false&#39;]:
             headers.update({&#39;x-ads-force&#39; : x_ads_force})
 
+        params = {}
+
+        if forceget is not None:
+            if isinstance(forceget, str):
+                params.update({&#39;forceget&#39; : forceget})
+
         resp = self.http.get(endpoint, headers=headers)
 
         while resp.status_code == 202:
@@ -590,7 +593,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
                               &#34; for endpoint: {}&#34;.format(endpoint))
 
     def get_object_properties(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;,
-                              object_id=None, endpoint=r&#39;:urn/metadata/:guid/properties&#39;):
+                              object_id=None, forceget=&#39;true&#39;, endpoint=r&#39;:urn/metadata/:guid/properties&#39;):
         &#34;&#34;&#34;
         Send a GET :urn/metadata/:guid/properties request to the BIM360 API, returns all object properties for the given metadata id (corresponding to a model view) for the model.
 
@@ -607,7 +610,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Properties JsonApi object in the form of a dict.
         &#34;&#34;&#34;
         try:
             token = self.token
@@ -637,6 +640,9 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
         if object_id is not None:
             if isinstance(object_id, (int, str)):
                 params.update({&#39;objectid&#39; : object_id})
+        if forceget is not None:
+            if isinstance(forceget, str):
+                params.update({&#39;forceget&#39; : forceget})
 
         resp = self.http.get(endpoint, headers=headers, params=params)
 
@@ -653,6 +659,10 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
                               &#34; and message : {}&#34;.format(resp.content) +
                               &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="PyForge.ForgeApi.ForgeApi" href="ForgeApi.html#PyForge.ForgeApi.ForgeApi">ForgeApi</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="PyForge.ForgeModelDerivative.ModelDerivativeApi.get_derivative"><code class="name flex">
@@ -682,7 +692,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>None.</p></div>
+<p>Response object with partial chunked body containing the requested derivative.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -703,7 +713,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
-        None.
+        Response object with partial chunked body containing the requested derivative.
     &#34;&#34;&#34;
     try:
         token = self.token
@@ -756,12 +766,12 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If any of token and self.token, urn are of NoneType.</dd>
+<dd>If self.token, urn are of NoneType.</dd>
 <dt><code>ConnectionError</code></dt>
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>None.</p></div>
+<p>dict(JsonApiObject): Manifest JsonApi object in the form of a dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -773,14 +783,14 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
     Args:
         urn (str, optional): The urn for the BIM360 model. Defaults to None.
         accept_encoding (str, optional): Specifies if the results may be compressed (allowed: gzip or *). Defaults to None.
-        endpoint (str, optional):  endpoint for the GET :urn/metadata. Defaults to r&#39;:urn/manifest&#39;
+        endpoint (str, optional): endpoint for the GET :urn/metadata. Defaults to r&#39;:urn/manifest&#39;
 
     Raises:
-        ValueError: If any of token and self.token, urn are of NoneType.
+        ValueError: If self.token, urn are of NoneType.
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
-        None.
+        dict(JsonApiObject): Manifest JsonApi object in the form of a dict.
     &#34;&#34;&#34;
     try:
         token = self.token
@@ -836,7 +846,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>None.</p></div>
+<p>dict(JsonApiObject): Metadata JsonApi object in the form of a dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -855,7 +865,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
-        None.
+        dict(JsonApiObject): Metadata JsonApi object in the form of a dict.
     &#34;&#34;&#34;
     try:
         token = self.token
@@ -890,7 +900,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 </details>
 </dd>
 <dt id="PyForge.ForgeModelDerivative.ModelDerivativeApi.get_object_properties"><code class="name flex">
-<span>def <span class="ident">get_object_properties</span></span>(<span>self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', object_id=None, endpoint=':urn/metadata/:guid/properties')</span>
+<span>def <span class="ident">get_object_properties</span></span>(<span>self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', object_id=None, forceget='true', endpoint=':urn/metadata/:guid/properties')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a GET :urn/metadata/:guid/properties request to the BIM360 API, returns all object properties for the given metadata id (corresponding to a model view) for the model.</p>
@@ -917,13 +927,13 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>None.</p></div>
+<p>dict(JsonApiObject): Properties JsonApi object in the form of a dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_object_properties(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;,
-                          object_id=None, endpoint=r&#39;:urn/metadata/:guid/properties&#39;):
+                          object_id=None, forceget=&#39;true&#39;, endpoint=r&#39;:urn/metadata/:guid/properties&#39;):
     &#34;&#34;&#34;
     Send a GET :urn/metadata/:guid/properties request to the BIM360 API, returns all object properties for the given metadata id (corresponding to a model view) for the model.
 
@@ -940,7 +950,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
-        None.
+        dict(JsonApiObject): Properties JsonApi object in the form of a dict.
     &#34;&#34;&#34;
     try:
         token = self.token
@@ -970,6 +980,9 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
     if object_id is not None:
         if isinstance(object_id, (int, str)):
             params.update({&#39;objectid&#39; : object_id})
+    if forceget is not None:
+        if isinstance(forceget, str):
+            params.update({&#39;forceget&#39; : forceget})
 
     resp = self.http.get(endpoint, headers=headers, params=params)
 
@@ -988,7 +1001,7 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 </details>
 </dd>
 <dt id="PyForge.ForgeModelDerivative.ModelDerivativeApi.get_object_tree"><code class="name flex">
-<span>def <span class="ident">get_object_tree</span></span>(<span>self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', endpoint=':urn/metadata/:guid')</span>
+<span>def <span class="ident">get_object_tree</span></span>(<span>self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', forceget='true', endpoint=':urn/metadata/:guid')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a GET :urn/metadata/:guid request to the BIM360 API, returns the object tree for the given metadata id (corresponding to a model view) for the model.</p>
@@ -1008,17 +1021,18 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If any of token and self.token, urn and guid are of NoneType.</dd>
+<dd>If any of self.token, urn and guid are of NoneType.</dd>
 <dt><code>ConnectionError</code></dt>
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
-<p>None.</p></div>
+<p>dict(JsonApiObject): Object tree JsonApi object in the form of a dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;, endpoint=r&#39;:urn/metadata/:guid&#39;):
+<pre><code class="python">def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force=&#39;true&#39;, forceget=&#39;true&#39;,
+                    endpoint=r&#39;:urn/metadata/:guid&#39;):
     &#34;&#34;&#34;
     Send a GET :urn/metadata/:guid request to the BIM360 API, returns the object tree for the given metadata id (corresponding to a model view) for the model.
 
@@ -1030,11 +1044,11 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
         endpoint (str, optional): Endpoint for the GET :urn/metadata/:guid. Defaults to r&#39;:urn/metadata/:guid&#39;
 
     Raises:
-        ValueError: If any of token and self.token, urn and guid are of NoneType.
+        ValueError: If any of self.token, urn and guid are of NoneType.
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
-        None.
+        dict(JsonApiObject): Object tree JsonApi object in the form of a dict.
     &#34;&#34;&#34;
     try:
         token = self.token
@@ -1058,6 +1072,12 @@ Defaults to r'https://developer.api.autodesk.com/modelderivative/v2/designdata/'
             headers.update({&#39;Accept-Encoding&#39; : accept_encoding})
     if x_ads_force in [&#39;true&#39;, &#39;false&#39;]:
         headers.update({&#39;x-ads-force&#39; : x_ads_force})
+
+    params = {}
+
+    if forceget is not None:
+        if isinstance(forceget, str):
+            params.update({&#39;forceget&#39; : forceget})
 
     resp = self.http.get(endpoint, headers=headers)
 

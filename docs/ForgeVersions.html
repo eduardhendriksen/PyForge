@@ -29,46 +29,52 @@
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;Module containing classes related to item versions on the Autodesk Forge BIM360 platform.&#34;&#34;&#34;
-import requests
+from PyForge.ForgeApi import ForgeApi
 from urllib.parse import quote_plus
 
 
-class VersionsApi():
+class VersionsApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 versions.&#34;&#34;&#34;
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;,
+                 timeout=1):
         &#34;&#34;&#34;
-        Initialize the VersionsApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the VersionsApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the versions API.
+                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
         &#34;&#34;&#34;
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_version(self, token, project_id, version_id,
-                    url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id&#39;):
+    def get_version(self, project_id, version_id,
+                    endpoint=r&#39;:project_id/versions/:version_id&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/versions/:version_id request to the BIM360 API, returns the version corresponding to the version id.
 
         Args:
-            token: Authentication token for Autodesk Forge API.
             project_id: The project id for the project the folder is in.
             version_id (str): Version id of the version to be obtained
-            url (str, optional): url endpoint for the GET projects/:project_id/versions/:version_id request.
-            Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id&#39;.
+            endpoint (str, optional): endpoint for the GET projects/:project_id/versions/:version_id request.
+            Defaults to r&#39;:project_id/versions/:version_id&#39;.
+
+        Raises:
+            ValueError: If self.token, project_id or version_id are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             dict(JsonApiObject): Version JsonApi object in the form of a dict.
-
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the VersionsApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -79,12 +85,13 @@ class VersionsApi():
         if version_id is None:
             raise ValueError(&#34;Please enter a version id.&#34;)
 
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:version_id&#39;, quote_plus(version_id))
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:version_id&#39;, quote_plus(version_id))
 
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                timeout=12)
+        headers = {}
+
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
+        resp = self.http.get(endpoint, headers=headers)
 
         if resp.status_code == 200:
             cont = resp.json()
@@ -93,10 +100,9 @@ class VersionsApi():
         if resp.status_code == 401:
             raise ConnectionError(&#34;Renew authorization token.&#34;)
 
-        raise ConnectionError(&#34;Request failed with &#34; +
-                              &#34;code {}&#34;.format(resp.status_code) +
-                              &#34; and message :&#34; +
-                              &#34;{}&#34;.format(resp.content))</code></pre>
+        raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                              &#34; and message : {}&#34;.format(resp.content) +
+                              &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
 </section>
 <section>
@@ -110,15 +116,20 @@ class VersionsApi():
 <dl>
 <dt id="PyForge.ForgeVersions.VersionsApi"><code class="flex name class">
 <span>class <span class="ident">VersionsApi</span></span>
-<span>(</span><span>token=None)</span>
+<span>(</span><span>token, base_url='https://developer.api.autodesk.com/data/v1/projects/', timeout=1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class provides the base API calls for Autodesk BIM360 versions.</p>
-<p>Initialize the VersionsApi class and optionally attach an authentication token for the Autodesk Forge API.</p>
+<p>Initialize the VersionsApi class and attach an authentication token for the Autodesk Forge API.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>token</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Authentication token for Autodesk Forge API. Defaults to None.</dd>
+<dt><strong><code>token</code></strong> :&ensp;<code>str</code></dt>
+<dd>Authentication token for Autodesk Forge API.</dd>
+<dt><strong><code>base_url</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Base URL for calls to the versions API.
+Defaults to r'https://developer.api.autodesk.com/data/v1/projects/'</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Default timeout for API calls. Defaults to 1.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>None.</p></div>
@@ -126,42 +137,48 @@ class VersionsApi():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class VersionsApi():
+<pre><code class="python">class VersionsApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 versions.&#34;&#34;&#34;
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;,
+                 timeout=1):
         &#34;&#34;&#34;
-        Initialize the VersionsApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the VersionsApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the versions API.
+                Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/&#39;
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
         &#34;&#34;&#34;
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_version(self, token, project_id, version_id,
-                    url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id&#39;):
+    def get_version(self, project_id, version_id,
+                    endpoint=r&#39;:project_id/versions/:version_id&#39;):
         &#34;&#34;&#34;
         Send a GET projects/:project_id/versions/:version_id request to the BIM360 API, returns the version corresponding to the version id.
 
         Args:
-            token: Authentication token for Autodesk Forge API.
             project_id: The project id for the project the folder is in.
             version_id (str): Version id of the version to be obtained
-            url (str, optional): url endpoint for the GET projects/:project_id/versions/:version_id request.
-            Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id&#39;.
+            endpoint (str, optional): endpoint for the GET projects/:project_id/versions/:version_id request.
+            Defaults to r&#39;:project_id/versions/:version_id&#39;.
+
+        Raises:
+            ValueError: If self.token, project_id or version_id are of NoneType.
+            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             dict(JsonApiObject): Version JsonApi object in the form of a dict.
-
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the VersionsApi.&#34;)
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
@@ -172,12 +189,13 @@ class VersionsApi():
         if version_id is None:
             raise ValueError(&#34;Please enter a version id.&#34;)
 
-        url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:version_id&#39;, quote_plus(version_id))
+        endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:version_id&#39;, quote_plus(version_id))
 
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                timeout=12)
+        headers = {}
+
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
+        resp = self.http.get(endpoint, headers=headers)
 
         if resp.status_code == 200:
             cont = resp.json()
@@ -186,57 +204,66 @@ class VersionsApi():
         if resp.status_code == 401:
             raise ConnectionError(&#34;Renew authorization token.&#34;)
 
-        raise ConnectionError(&#34;Request failed with &#34; +
-                              &#34;code {}&#34;.format(resp.status_code) +
-                              &#34; and message :&#34; +
-                              &#34;{}&#34;.format(resp.content))</code></pre>
+        raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                              &#34; and message : {}&#34;.format(resp.content) +
+                              &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="PyForge.ForgeApi.ForgeApi" href="ForgeApi.html#PyForge.ForgeApi.ForgeApi">ForgeApi</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="PyForge.ForgeVersions.VersionsApi.get_version"><code class="name flex">
-<span>def <span class="ident">get_version</span></span>(<span>self, token, project_id, version_id, url='https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id')</span>
+<span>def <span class="ident">get_version</span></span>(<span>self, project_id, version_id, endpoint=':project_id/versions/:version_id')</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Send a GET projects/:project_id/versions/:version_id request to the BIM360 API, returns the version corresponding to the version id.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>token</code></strong></dt>
-<dd>Authentication token for Autodesk Forge API.</dd>
 <dt><strong><code>project_id</code></strong></dt>
 <dd>The project id for the project the folder is in.</dd>
 <dt><strong><code>version_id</code></strong> :&ensp;<code>str</code></dt>
 <dd>Version id of the version to be obtained</dd>
-<dt><strong><code>url</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>url endpoint for the GET projects/:project_id/versions/:version_id request.</dd>
+<dt><strong><code>endpoint</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>endpoint for the GET projects/:project_id/versions/:version_id request.</dd>
 </dl>
-<p>Defaults to r'https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id'.</p>
+<p>Defaults to r':project_id/versions/:version_id'.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ValueError</code></dt>
+<dd>If self.token, project_id or version_id are of NoneType.</dd>
+<dt><code>ConnectionError</code></dt>
+<dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
+</dl>
 <h2 id="returns">Returns</h2>
 <p>dict(JsonApiObject): Version JsonApi object in the form of a dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_version(self, token, project_id, version_id,
-                url=r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id&#39;):
+<pre><code class="python">def get_version(self, project_id, version_id,
+                endpoint=r&#39;:project_id/versions/:version_id&#39;):
     &#34;&#34;&#34;
     Send a GET projects/:project_id/versions/:version_id request to the BIM360 API, returns the version corresponding to the version id.
 
     Args:
-        token: Authentication token for Autodesk Forge API.
         project_id: The project id for the project the folder is in.
         version_id (str): Version id of the version to be obtained
-        url (str, optional): url endpoint for the GET projects/:project_id/versions/:version_id request.
-        Defaults to r&#39;https://developer.api.autodesk.com/data/v1/projects/:project_id/versions/:version_id&#39;.
+        endpoint (str, optional): endpoint for the GET projects/:project_id/versions/:version_id request.
+        Defaults to r&#39;:project_id/versions/:version_id&#39;.
+
+    Raises:
+        ValueError: If self.token, project_id or version_id are of NoneType.
+        ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
         dict(JsonApiObject): Version JsonApi object in the form of a dict.
-
     &#34;&#34;&#34;
-    if (self.token is None and token is None):
-        raise ValueError(&#34;Please give a authorization token.&#34;)
-
-    if self.token is not None:
+    try:
         token = self.token
+    except AttributeError:
+        raise ValueError(&#34;Please initialise the VersionsApi.&#34;)
 
     if project_id is None:
         raise ValueError(&#34;Please enter a project id.&#34;)
@@ -247,12 +274,13 @@ class VersionsApi():
     if version_id is None:
         raise ValueError(&#34;Please enter a version id.&#34;)
 
-    url = url.replace(&#39;:project_id&#39;, project_id).replace(&#39;:version_id&#39;, quote_plus(version_id))
+    endpoint = endpoint.replace(&#39;:project_id&#39;, project_id).replace(&#39;:version_id&#39;, quote_plus(version_id))
 
-    resp = requests.request(&#39;GET&#39;,
-                            url,
-                            headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                            timeout=12)
+    headers = {}
+
+    headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
+
+    resp = self.http.get(endpoint, headers=headers)
 
     if resp.status_code == 200:
         cont = resp.json()
@@ -261,10 +289,9 @@ class VersionsApi():
     if resp.status_code == 401:
         raise ConnectionError(&#34;Renew authorization token.&#34;)
 
-    raise ConnectionError(&#34;Request failed with &#34; +
-                          &#34;code {}&#34;.format(resp.status_code) +
-                          &#34; and message :&#34; +
-                          &#34;{}&#34;.format(resp.content))</code></pre>
+    raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                          &#34; and message : {}&#34;.format(resp.content) +
+                          &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
 </dd>
 </dl>

@@ -29,13 +29,12 @@
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;Module containing classes related to authentication on the Autodesk Forge BIM360 platform.&#34;&#34;&#34;
-import requests
+from PyForge.ForgeApi import ForgeApi
 
-
-class OAuth2Negotiator():
+class OAuth2Negotiator(ForgeApi):
     &#34;&#34;&#34;Class to negotiate the authentication with the Autodesk Forge Api Authentication servers.&#34;&#34;&#34;
 
-    def __init__(self, webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None):
+    def __init__(self, webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None, timeout=1):
         &#34;&#34;&#34;
         Initialize the OAuth2Negotiator class and assign the needed parameters for authentication.
 
@@ -46,6 +45,7 @@ class OAuth2Negotiator():
             scopes (list, str): API access scopes requested in the authentication.
             redirectAddress (str, optional): Redirect web address used for 3-legged authentication. Defaults to None.
             endAddress (str, optional): End web address to redirect to after 3-legged authentication has succeeded. Defaults to None.
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Raises:
             TypeError: If the type of the scopes argument is not list of str this error is raised.
@@ -70,6 +70,8 @@ class OAuth2Negotiator():
 
         self.endAddress = endAddress
 
+        super().__init__(self, base_url=webAddress, timeout=timeout)
+
     def get_token(self, legs=2):
         &#34;&#34;&#34;
         Contact the Autodesk Forge API Authentication server and obtain an access token.
@@ -87,32 +89,28 @@ class OAuth2Negotiator():
         &#34;&#34;&#34;
         if legs == 2:
 
-            method = &#39;POST&#39;
-            headers = { &#39;Content-Type&#39; : &#39;application/x-www-form-urlencoded&#39; }
-            data = { &#39;client_id&#39; : self.clientId,
-                       &#39;client_secret&#39; : self.clientSecret,
-                       &#39;grant_type&#39; : &#39;client_credentials&#39;,
-                       &#39;scope&#39; : self.scopes }
+            headers = {}
 
+            headers.update({ &#39;Content-Type&#39; : &#39;application/x-www-form-urlencoded&#39; })
 
-            resp = requests.request(method ,
-                                    self.webAddress,
-                                    headers=headers,
-                                    data=data,
-                                    timeout=12)
+            data = {}
+
+            data.update({&#39;client_id&#39; : self.clientId})
+            data.update({&#39;client_secret&#39; : self.clientSecret})
+            data.update({&#39;grant_type&#39; : &#39;client_credentials&#39;})
+            data.update({&#39;scope&#39; : self.scopes})
+
+            resp = self.http.post(self.webAddress, headers=headers, data=data)
 
             if resp.status_code == 200:
                 cont = resp.json()
                 return (cont[&#39;access_token&#39;], cont[&#39;expires_in&#39;])
-            else:
-                if resp.status_code in [429, 500]:
-                    raise ConnectionError(&#34;Connection to auth server not &#34; +
-                                          &#34;made, please try again.&#34;)
-                else:
-                    raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                          &#34; and message : {}&#34;.format(resp.content))
+
+            raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                                  &#34; and message : {}&#34;.format(resp.content) +
+                                  &#34; during authentication.&#34;)
         else:
-            pass</code></pre>
+            raise NotImplementedError(&#34;3-legged authentication has not been implemented.&#34;)</code></pre>
 </details>
 </section>
 <section>
@@ -126,7 +124,7 @@ class OAuth2Negotiator():
 <dl>
 <dt id="PyForge.AuthNegotiator.OAuth2Negotiator"><code class="flex name class">
 <span>class <span class="ident">OAuth2Negotiator</span></span>
-<span>(</span><span>webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None)</span>
+<span>(</span><span>webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None, timeout=1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Class to negotiate the authentication with the Autodesk Forge Api Authentication servers.</p>
@@ -145,6 +143,8 @@ class OAuth2Negotiator():
 <dd>Redirect web address used for 3-legged authentication. Defaults to None.</dd>
 <dt><strong><code>endAddress</code></strong> :&ensp;<code>str</code>, optional</dt>
 <dd>End web address to redirect to after 3-legged authentication has succeeded. Defaults to None.</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Default timeout for API calls. Defaults to 1.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
@@ -157,10 +157,10 @@ class OAuth2Negotiator():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class OAuth2Negotiator():
+<pre><code class="python">class OAuth2Negotiator(ForgeApi):
     &#34;&#34;&#34;Class to negotiate the authentication with the Autodesk Forge Api Authentication servers.&#34;&#34;&#34;
 
-    def __init__(self, webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None):
+    def __init__(self, webAddress, clientId, clientSecret, scopes, redirectAddress=None, endAddress=None, timeout=1):
         &#34;&#34;&#34;
         Initialize the OAuth2Negotiator class and assign the needed parameters for authentication.
 
@@ -171,6 +171,7 @@ class OAuth2Negotiator():
             scopes (list, str): API access scopes requested in the authentication.
             redirectAddress (str, optional): Redirect web address used for 3-legged authentication. Defaults to None.
             endAddress (str, optional): End web address to redirect to after 3-legged authentication has succeeded. Defaults to None.
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Raises:
             TypeError: If the type of the scopes argument is not list of str this error is raised.
@@ -195,6 +196,8 @@ class OAuth2Negotiator():
 
         self.endAddress = endAddress
 
+        super().__init__(self, base_url=webAddress, timeout=timeout)
+
     def get_token(self, legs=2):
         &#34;&#34;&#34;
         Contact the Autodesk Forge API Authentication server and obtain an access token.
@@ -212,33 +215,33 @@ class OAuth2Negotiator():
         &#34;&#34;&#34;
         if legs == 2:
 
-            method = &#39;POST&#39;
-            headers = { &#39;Content-Type&#39; : &#39;application/x-www-form-urlencoded&#39; }
-            data = { &#39;client_id&#39; : self.clientId,
-                       &#39;client_secret&#39; : self.clientSecret,
-                       &#39;grant_type&#39; : &#39;client_credentials&#39;,
-                       &#39;scope&#39; : self.scopes }
+            headers = {}
 
+            headers.update({ &#39;Content-Type&#39; : &#39;application/x-www-form-urlencoded&#39; })
 
-            resp = requests.request(method ,
-                                    self.webAddress,
-                                    headers=headers,
-                                    data=data,
-                                    timeout=12)
+            data = {}
+
+            data.update({&#39;client_id&#39; : self.clientId})
+            data.update({&#39;client_secret&#39; : self.clientSecret})
+            data.update({&#39;grant_type&#39; : &#39;client_credentials&#39;})
+            data.update({&#39;scope&#39; : self.scopes})
+
+            resp = self.http.post(self.webAddress, headers=headers, data=data)
 
             if resp.status_code == 200:
                 cont = resp.json()
                 return (cont[&#39;access_token&#39;], cont[&#39;expires_in&#39;])
-            else:
-                if resp.status_code in [429, 500]:
-                    raise ConnectionError(&#34;Connection to auth server not &#34; +
-                                          &#34;made, please try again.&#34;)
-                else:
-                    raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                          &#34; and message : {}&#34;.format(resp.content))
+
+            raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                                  &#34; and message : {}&#34;.format(resp.content) +
+                                  &#34; during authentication.&#34;)
         else:
-            pass</code></pre>
+            raise NotImplementedError(&#34;3-legged authentication has not been implemented.&#34;)</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="PyForge.ForgeApi.ForgeApi" href="ForgeApi.html#PyForge.ForgeApi.ForgeApi">ForgeApi</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="PyForge.AuthNegotiator.OAuth2Negotiator.get_token"><code class="name flex">
@@ -284,32 +287,28 @@ class OAuth2Negotiator():
     &#34;&#34;&#34;
     if legs == 2:
 
-        method = &#39;POST&#39;
-        headers = { &#39;Content-Type&#39; : &#39;application/x-www-form-urlencoded&#39; }
-        data = { &#39;client_id&#39; : self.clientId,
-                   &#39;client_secret&#39; : self.clientSecret,
-                   &#39;grant_type&#39; : &#39;client_credentials&#39;,
-                   &#39;scope&#39; : self.scopes }
+        headers = {}
 
+        headers.update({ &#39;Content-Type&#39; : &#39;application/x-www-form-urlencoded&#39; })
 
-        resp = requests.request(method ,
-                                self.webAddress,
-                                headers=headers,
-                                data=data,
-                                timeout=12)
+        data = {}
+
+        data.update({&#39;client_id&#39; : self.clientId})
+        data.update({&#39;client_secret&#39; : self.clientSecret})
+        data.update({&#39;grant_type&#39; : &#39;client_credentials&#39;})
+        data.update({&#39;scope&#39; : self.scopes})
+
+        resp = self.http.post(self.webAddress, headers=headers, data=data)
 
         if resp.status_code == 200:
             cont = resp.json()
             return (cont[&#39;access_token&#39;], cont[&#39;expires_in&#39;])
-        else:
-            if resp.status_code in [429, 500]:
-                raise ConnectionError(&#34;Connection to auth server not &#34; +
-                                      &#34;made, please try again.&#34;)
-            else:
-                raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                                      &#34; and message : {}&#34;.format(resp.content))
+
+        raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                              &#34; and message : {}&#34;.format(resp.content) +
+                              &#34; during authentication.&#34;)
     else:
-        pass</code></pre>
+        raise NotImplementedError(&#34;3-legged authentication has not been implemented.&#34;)</code></pre>
 </details>
 </dd>
 </dl>

@@ -80,13 +80,11 @@ class FolderTree():
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
-        else:
-            project_id = &#34;b.{}&#34;.format(project_id)
 
         type_filter = &#39;folders&#39;
 
         folders_api = FoldersApi(token)
-        folder_data, folder_versions = folders_api.get_folder_contents(token, project_id, self.folder[&#39;id&#39;], type_filter)
+        folder_data, folder_versions = folders_api.get_folder_contents(project_id, self.folder[&#39;id&#39;], type_filter)
 
         children_folders = []
 
@@ -221,13 +219,11 @@ class FolderTree():
 
         if project_id is None:
             raise ValueError(&#34;Please enter a project id.&#34;)
-        else:
-            project_id = &#34;b.{}&#34;.format(project_id)
 
         type_filter = &#39;folders&#39;
 
         folders_api = FoldersApi(token)
-        folder_data, folder_versions = folders_api.get_folder_contents(token, project_id, self.folder[&#39;id&#39;], type_filter)
+        folder_data, folder_versions = folders_api.get_folder_contents(project_id, self.folder[&#39;id&#39;], type_filter)
 
         children_folders = []
 
@@ -325,13 +321,11 @@ containing JsonApiObjects.</p></div>
 
     if project_id is None:
         raise ValueError(&#34;Please enter a project id.&#34;)
-    else:
-        project_id = &#34;b.{}&#34;.format(project_id)
 
     type_filter = &#39;folders&#39;
 
     folders_api = FoldersApi(token)
-    folder_data, folder_versions = folders_api.get_folder_contents(token, project_id, self.folder[&#39;id&#39;], type_filter)
+    folder_data, folder_versions = folders_api.get_folder_contents(project_id, self.folder[&#39;id&#39;], type_filter)
 
     children_folders = []
 

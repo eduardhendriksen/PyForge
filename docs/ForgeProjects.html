@@ -29,144 +29,108 @@
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;Module containing classes related to projects on the Autodesk Forge BIM360 platform.&#34;&#34;&#34;
-import requests
+from PyForge.ForgeApi import ForgeApi
 
 
-class ProjectsApi():
+class ProjectsApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 projects.&#34;&#34;&#34;
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r&#39;https://developer.api.autodesk.com/project/v1/hubs/&#39;,
+                 timeout=1):
         &#34;&#34;&#34;
-        Initialize the ProjectsApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the ProjectsApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the projects API.
+                Defaults to r&#39;https://developer.api.autodesk.com/project/v1/hubs/&#39;
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
         Returns:
             None.
-
         &#34;&#34;&#34;
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_account_projects(self, token=None, account_id=None, limit=100, offset=0, sort=[], field=[],
-                             url=r&#39;https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects&#39;):
+    def get_account_projects(self, account_id, limit=100,
+                             endpoint=r&#39;:hub_id/projects&#39;):
         &#34;&#34;&#34;
-        Send a GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.
+        Send a GET hubs/:hub_id/projects // GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            account_id (str, optional): The account id for the BIM360 account. Defaults to None.
+            account_id (str): The account id // hub id for the BIM360 account. They are related in the form hub_id = &#34;b.&#34; + account_id
             limit (int, optional): Size of the response array. Defaults to 100.
             offset (int, optional): Offset of the response array. Defaults to 0.
             sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
             field (list, optional): List of string field names to include in the response array. Defaults to [].
-            url (str, optional):  url endpoint for the GET accounts/:account_id/projects request.
-                Currently default is pointed at the US BIM360 servers.
-                EMEA server: https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/projects
-                Defaults to https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects.
-
+            endpoint (str, optional):  endpoint for the GET accounts/:account_id/projects request.
+                Defaults to r&#39;:account_id/projects&#39;.
         Raises:
-            ValueError: If any of token and self.token, account_id are of NoneType.
-            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
-
-        Returns:
-            None.
-        &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
-            token = self.token
-
-        if account_id is None:
-            raise ValueError(&#34;Please enter a account id.&#34;)
-
-        url = url.replace(&#39;:account_id&#39;, account_id)
-
-        params = {}
-
-        params.update({&#39;limit&#39; : limit})
-        params.update({&#39;offset&#39; : offset})
-
-        if sort:
-            sort = &#34;,&#34;.join(sort)
-            params.update({&#39;sort&#39; : sort})
-        if field:
-            field = &#34;,&#34;.join(field)
-            params.update({&#39;field&#39; : field})
-
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                params=params,
-                                headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                timeout=12)
-
-        if resp.status_code == 200:
-            cont = resp.json()
-
-            if isinstance(cont, list):
-                if len(cont) == limit:
-                    cont += self.get_account_projects(token=token,
-                                                      account_id=account_id,
-                                                      limit=limit,
-                                                      offset=offset+limit,
-                                                      sort=sort,
-                                                      field=field,
-                                                      url=url)
-
-                return cont
-            else:
-                print(cont)
-
-        if resp.status_code == 401:
-            raise ConnectionError(&#34;Renew authorization token.&#34;)
-
-        raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                              &#34; and message : {}&#34;.format(resp.content))
-
-
-    def get_hub_projects(self, token=None, hub_id=None, url=r&#39;https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects&#39;):
-        &#34;&#34;&#34;
-        Send a GET hubs/:hub_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given hub.
-
-        Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            hub_id (str, optional): The hub id for the hub. Defaults to None.
-            url (str, optional): url endpoint for the GET hubs/:hub_id/projects request.
-                Defaults to r&#39;https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects&#39;.
-
-        Raises:
-            ValueError: If any of token and self.token, hub_id are of NoneType.
+            ValueError: If any self.token and account_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             list(dict(JsonApiObject)): List of project JsonApi objects in the form of dicts.
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the ProjectsApi.&#34;)
 
-        if hub_id is None:
-            raise ValueError(&#34;Please enter a hub id.&#34;)
+        if account_id is None:
+            raise ValueError(&#34;Please enter a account id.&#34;)
 
-        url = url.replace(&#39;:hub_id&#39;, hub_id)
+        if not account_id.startswith(&#34;b.&#34;):
+            account_id = &#34;b.{}&#34;.format(account_id)
 
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                timeout=12)
+        endpoint = endpoint.replace(&#39;:hub_id&#39;, account_id)
 
-        if resp.status_code == 200:
-            cont = resp.json()
-            return cont[&#39;data&#39;]
+        headers = {}
 
-        if resp.status_code == 401:
-            raise ConnectionError(&#34;Renew authorization token.&#34;)
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
 
-        raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                              &#34; and message : {}&#34;.format(resp.content))</code></pre>
+        params = {}
+
+        params.update({&#39;page[limit]&#39; : limit})
+
+        next_page = -1
+        data = []
+
+        while next_page != 0:
+
+            if next_page &gt; 0:
+
+                params.update({&#39;page[number]&#39; : str(next_page)})
+
+                resp = self.http.get(endpoint, headers=headers, params=params)
+
+            else:
+
+                resp = self.http.get(endpoint, headers=headers, params=params)
+
+            if resp.status_code == 200:
+
+                cont = resp.json()
+                data += cont[&#39;data&#39;]
+
+                try:
+                    match = re.search(r&#39;page%5Bnumber%5D=(\d+)&#39;, cont[&#39;links&#39;][&#39;next&#39;][&#39;href&#39;])
+
+                    if match is not None:
+                        next_page = int(match.groups()[0])
+                    else:
+                        return data
+
+                except KeyError:
+
+                    return data
+
+            else:
+                if resp.status_code == 401:
+                    raise ConnectionError(&#34;Renew authorization token.&#34;)
+
+                raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                                      &#34; and message : {}&#34;.format(resp.content) +
+                                      &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
 </section>
 <section>
@@ -180,15 +144,20 @@ class ProjectsApi():
 <dl>
 <dt id="PyForge.ForgeProjects.ProjectsApi"><code class="flex name class">
 <span>class <span class="ident">ProjectsApi</span></span>
-<span>(</span><span>token=None)</span>
+<span>(</span><span>token, base_url='https://developer.api.autodesk.com/project/v1/hubs/', timeout=1)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>This class provides the base API calls for Autodesk BIM360 projects.</p>
-<p>Initialize the ProjectsApi class and optionally attach an authentication token for the Autodesk Forge API.</p>
+<p>Initialize the ProjectsApi class and attach an authentication token for the Autodesk Forge API.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>token</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Authentication token for Autodesk Forge API. Defaults to None.</dd>
+<dt><strong><code>token</code></strong> :&ensp;<code>str</code></dt>
+<dd>Authentication token for Autodesk Forge API.</dd>
+<dt><strong><code>base_url</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>Base URL for calls to the projects API.
+Defaults to r'https://developer.api.autodesk.com/project/v1/hubs/'</dd>
+<dt><strong><code>timeout</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Default timeout for API calls. Defaults to 1.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p>None.</p></div>
@@ -196,155 +165,121 @@ class ProjectsApi():
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class ProjectsApi():
+<pre><code class="python">class ProjectsApi(ForgeApi):
     &#34;&#34;&#34;This class provides the base API calls for Autodesk BIM360 projects.&#34;&#34;&#34;
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r&#39;https://developer.api.autodesk.com/project/v1/hubs/&#39;,
+                 timeout=1):
         &#34;&#34;&#34;
-        Initialize the ProjectsApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the ProjectsApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the projects API.
+                Defaults to r&#39;https://developer.api.autodesk.com/project/v1/hubs/&#39;
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
         Returns:
             None.
-
         &#34;&#34;&#34;
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_account_projects(self, token=None, account_id=None, limit=100, offset=0, sort=[], field=[],
-                             url=r&#39;https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects&#39;):
+    def get_account_projects(self, account_id, limit=100,
+                             endpoint=r&#39;:hub_id/projects&#39;):
         &#34;&#34;&#34;
-        Send a GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.
+        Send a GET hubs/:hub_id/projects // GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            account_id (str, optional): The account id for the BIM360 account. Defaults to None.
+            account_id (str): The account id // hub id for the BIM360 account. They are related in the form hub_id = &#34;b.&#34; + account_id
             limit (int, optional): Size of the response array. Defaults to 100.
             offset (int, optional): Offset of the response array. Defaults to 0.
             sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
             field (list, optional): List of string field names to include in the response array. Defaults to [].
-            url (str, optional):  url endpoint for the GET accounts/:account_id/projects request.
-                Currently default is pointed at the US BIM360 servers.
-                EMEA server: https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/projects
-                Defaults to https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects.
-
+            endpoint (str, optional):  endpoint for the GET accounts/:account_id/projects request.
+                Defaults to r&#39;:account_id/projects&#39;.
         Raises:
-            ValueError: If any of token and self.token, account_id are of NoneType.
-            ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
-
-        Returns:
-            None.
-        &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
-            token = self.token
-
-        if account_id is None:
-            raise ValueError(&#34;Please enter a account id.&#34;)
-
-        url = url.replace(&#39;:account_id&#39;, account_id)
-
-        params = {}
-
-        params.update({&#39;limit&#39; : limit})
-        params.update({&#39;offset&#39; : offset})
-
-        if sort:
-            sort = &#34;,&#34;.join(sort)
-            params.update({&#39;sort&#39; : sort})
-        if field:
-            field = &#34;,&#34;.join(field)
-            params.update({&#39;field&#39; : field})
-
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                params=params,
-                                headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                timeout=12)
-
-        if resp.status_code == 200:
-            cont = resp.json()
-
-            if isinstance(cont, list):
-                if len(cont) == limit:
-                    cont += self.get_account_projects(token=token,
-                                                      account_id=account_id,
-                                                      limit=limit,
-                                                      offset=offset+limit,
-                                                      sort=sort,
-                                                      field=field,
-                                                      url=url)
-
-                return cont
-            else:
-                print(cont)
-
-        if resp.status_code == 401:
-            raise ConnectionError(&#34;Renew authorization token.&#34;)
-
-        raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                              &#34; and message : {}&#34;.format(resp.content))
-
-
-    def get_hub_projects(self, token=None, hub_id=None, url=r&#39;https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects&#39;):
-        &#34;&#34;&#34;
-        Send a GET hubs/:hub_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given hub.
-
-        Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-            hub_id (str, optional): The hub id for the hub. Defaults to None.
-            url (str, optional): url endpoint for the GET hubs/:hub_id/projects request.
-                Defaults to r&#39;https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects&#39;.
-
-        Raises:
-            ValueError: If any of token and self.token, hub_id are of NoneType.
+            ValueError: If any self.token and account_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
             list(dict(JsonApiObject)): List of project JsonApi objects in the form of dicts.
         &#34;&#34;&#34;
-        if (self.token is None and token is None):
-            raise ValueError(&#34;Please give a authorization token.&#34;)
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError(&#34;Please initialise the ProjectsApi.&#34;)
 
-        if hub_id is None:
-            raise ValueError(&#34;Please enter a hub id.&#34;)
+        if account_id is None:
+            raise ValueError(&#34;Please enter a account id.&#34;)
 
-        url = url.replace(&#39;:hub_id&#39;, hub_id)
+        if not account_id.startswith(&#34;b.&#34;):
+            account_id = &#34;b.{}&#34;.format(account_id)
 
-        resp = requests.request(&#39;GET&#39;,
-                                url,
-                                headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                                timeout=12)
+        endpoint = endpoint.replace(&#39;:hub_id&#39;, account_id)
 
-        if resp.status_code == 200:
-            cont = resp.json()
-            return cont[&#39;data&#39;]
+        headers = {}
 
-        if resp.status_code == 401:
-            raise ConnectionError(&#34;Renew authorization token.&#34;)
+        headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
 
-        raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                              &#34; and message : {}&#34;.format(resp.content))</code></pre>
+        params = {}
+
+        params.update({&#39;page[limit]&#39; : limit})
+
+        next_page = -1
+        data = []
+
+        while next_page != 0:
+
+            if next_page &gt; 0:
+
+                params.update({&#39;page[number]&#39; : str(next_page)})
+
+                resp = self.http.get(endpoint, headers=headers, params=params)
+
+            else:
+
+                resp = self.http.get(endpoint, headers=headers, params=params)
+
+            if resp.status_code == 200:
+
+                cont = resp.json()
+                data += cont[&#39;data&#39;]
+
+                try:
+                    match = re.search(r&#39;page%5Bnumber%5D=(\d+)&#39;, cont[&#39;links&#39;][&#39;next&#39;][&#39;href&#39;])
+
+                    if match is not None:
+                        next_page = int(match.groups()[0])
+                    else:
+                        return data
+
+                except KeyError:
+
+                    return data
+
+            else:
+                if resp.status_code == 401:
+                    raise ConnectionError(&#34;Renew authorization token.&#34;)
+
+                raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                                      &#34; and message : {}&#34;.format(resp.content) +
+                                      &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="PyForge.ForgeApi.ForgeApi" href="ForgeApi.html#PyForge.ForgeApi.ForgeApi">ForgeApi</a></li>
+</ul>
 <h3>Methods</h3>
 <dl>
 <dt id="PyForge.ForgeProjects.ProjectsApi.get_account_projects"><code class="name flex">
-<span>def <span class="ident">get_account_projects</span></span>(<span>self, token=None, account_id=None, limit=100, offset=0, sort=[], field=[], url='https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects')</span>
+<span>def <span class="ident">get_account_projects</span></span>(<span>self, account_id, limit=100, endpoint=':hub_id/projects')</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Send a GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.</p>
+<div class="desc"><p>Send a GET hubs/:hub_id/projects // GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.</p>
 <h2 id="args">Args</h2>
 <dl>
-<dt><strong><code>token</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Authentication token for Autodesk Forge API. Defaults to None.</dd>
-<dt><strong><code>account_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The account id for the BIM360 account. Defaults to None.</dd>
+<dt><strong><code>account_id</code></strong> :&ensp;<code>str</code></dt>
+<dd>The account id // hub id for the BIM360 account. They are related in the form hub_id = "b." + account_id</dd>
 <dt><strong><code>limit</code></strong> :&ensp;<code>int</code>, optional</dt>
 <dd>Size of the response array. Defaults to 100.</dd>
 <dt><strong><code>offset</code></strong> :&ensp;<code>int</code>, optional</dt>
@@ -353,121 +288,14 @@ class ProjectsApi():
 <dd>List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].</dd>
 <dt><strong><code>field</code></strong> :&ensp;<code>list</code>, optional</dt>
 <dd>List of string field names to include in the response array. Defaults to [].</dd>
-<dt><strong><code>url</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>url endpoint for the GET accounts/:account_id/projects request.
-Currently default is pointed at the US BIM360 servers.
-EMEA server: <a href="https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/projects">https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/projects</a>
-Defaults to <a href="https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects.">https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects.</a></dd>
+<dt><strong><code>endpoint</code></strong> :&ensp;<code>str</code>, optional</dt>
+<dd>endpoint for the GET accounts/:account_id/projects request.
+Defaults to r':account_id/projects'.</dd>
 </dl>
 <h2 id="raises">Raises</h2>
 <dl>
 <dt><code>ValueError</code></dt>
-<dd>If any of token and self.token, account_id are of NoneType.</dd>
-<dt><code>ConnectionError</code></dt>
-<dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<p>None.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_account_projects(self, token=None, account_id=None, limit=100, offset=0, sort=[], field=[],
-                         url=r&#39;https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects&#39;):
-    &#34;&#34;&#34;
-    Send a GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.
-
-    Args:
-        token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-        account_id (str, optional): The account id for the BIM360 account. Defaults to None.
-        limit (int, optional): Size of the response array. Defaults to 100.
-        offset (int, optional): Offset of the response array. Defaults to 0.
-        sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
-        field (list, optional): List of string field names to include in the response array. Defaults to [].
-        url (str, optional):  url endpoint for the GET accounts/:account_id/projects request.
-            Currently default is pointed at the US BIM360 servers.
-            EMEA server: https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/:account_id/projects
-            Defaults to https://developer.api.autodesk.com/hq/v1/accounts/:account_id/projects.
-
-    Raises:
-        ValueError: If any of token and self.token, account_id are of NoneType.
-        ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
-
-    Returns:
-        None.
-    &#34;&#34;&#34;
-    if (self.token is None and token is None):
-        raise ValueError(&#34;Please give a authorization token.&#34;)
-
-    if self.token is not None:
-        token = self.token
-
-    if account_id is None:
-        raise ValueError(&#34;Please enter a account id.&#34;)
-
-    url = url.replace(&#39;:account_id&#39;, account_id)
-
-    params = {}
-
-    params.update({&#39;limit&#39; : limit})
-    params.update({&#39;offset&#39; : offset})
-
-    if sort:
-        sort = &#34;,&#34;.join(sort)
-        params.update({&#39;sort&#39; : sort})
-    if field:
-        field = &#34;,&#34;.join(field)
-        params.update({&#39;field&#39; : field})
-
-    resp = requests.request(&#39;GET&#39;,
-                            url,
-                            params=params,
-                            headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                            timeout=12)
-
-    if resp.status_code == 200:
-        cont = resp.json()
-
-        if isinstance(cont, list):
-            if len(cont) == limit:
-                cont += self.get_account_projects(token=token,
-                                                  account_id=account_id,
-                                                  limit=limit,
-                                                  offset=offset+limit,
-                                                  sort=sort,
-                                                  field=field,
-                                                  url=url)
-
-            return cont
-        else:
-            print(cont)
-
-    if resp.status_code == 401:
-        raise ConnectionError(&#34;Renew authorization token.&#34;)
-
-    raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                          &#34; and message : {}&#34;.format(resp.content))</code></pre>
-</details>
-</dd>
-<dt id="PyForge.ForgeProjects.ProjectsApi.get_hub_projects"><code class="name flex">
-<span>def <span class="ident">get_hub_projects</span></span>(<span>self, token=None, hub_id=None, url='https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects')</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Send a GET hubs/:hub_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given hub.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>token</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>Authentication token for Autodesk Forge API. Defaults to None.</dd>
-<dt><strong><code>hub_id</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>The hub id for the hub. Defaults to None.</dd>
-<dt><strong><code>url</code></strong> :&ensp;<code>str</code>, optional</dt>
-<dd>url endpoint for the GET hubs/:hub_id/projects request.
-Defaults to r'https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects'.</dd>
-</dl>
-<h2 id="raises">Raises</h2>
-<dl>
-<dt><code>ValueError</code></dt>
-<dd>If any of token and self.token, hub_id are of NoneType.</dd>
+<dd>If any self.token and account_id are of NoneType.</dd>
 <dt><code>ConnectionError</code></dt>
 <dd>Different Connectionerrors based on retrieved ApiErrors from the Forge API.</dd>
 </dl>
@@ -477,48 +305,86 @@ Defaults to r'https://developer.api.autodesk.com/project/v1/hubs/:hub_id/project
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def get_hub_projects(self, token=None, hub_id=None, url=r&#39;https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects&#39;):
+<pre><code class="python">def get_account_projects(self, account_id, limit=100,
+                         endpoint=r&#39;:hub_id/projects&#39;):
     &#34;&#34;&#34;
-    Send a GET hubs/:hub_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given hub.
+    Send a GET hubs/:hub_id/projects // GET accounts/:account_id/projects request to the BIM360 API, returns the projects available to the Autodesk account on the given account.
 
     Args:
-        token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
-        hub_id (str, optional): The hub id for the hub. Defaults to None.
-        url (str, optional): url endpoint for the GET hubs/:hub_id/projects request.
-            Defaults to r&#39;https://developer.api.autodesk.com/project/v1/hubs/:hub_id/projects&#39;.
-
+        account_id (str): The account id // hub id for the BIM360 account. They are related in the form hub_id = &#34;b.&#34; + account_id
+        limit (int, optional): Size of the response array. Defaults to 100.
+        offset (int, optional): Offset of the response array. Defaults to 0.
+        sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
+        field (list, optional): List of string field names to include in the response array. Defaults to [].
+        endpoint (str, optional):  endpoint for the GET accounts/:account_id/projects request.
+            Defaults to r&#39;:account_id/projects&#39;.
     Raises:
-        ValueError: If any of token and self.token, hub_id are of NoneType.
+        ValueError: If any self.token and account_id are of NoneType.
         ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
     Returns:
         list(dict(JsonApiObject)): List of project JsonApi objects in the form of dicts.
     &#34;&#34;&#34;
-    if (self.token is None and token is None):
-        raise ValueError(&#34;Please give a authorization token.&#34;)
-
-    if self.token is not None:
+    try:
         token = self.token
+    except AttributeError:
+        raise ValueError(&#34;Please initialise the ProjectsApi.&#34;)
 
-    if hub_id is None:
-        raise ValueError(&#34;Please enter a hub id.&#34;)
+    if account_id is None:
+        raise ValueError(&#34;Please enter a account id.&#34;)
 
-    url = url.replace(&#39;:hub_id&#39;, hub_id)
+    if not account_id.startswith(&#34;b.&#34;):
+        account_id = &#34;b.{}&#34;.format(account_id)
 
-    resp = requests.request(&#39;GET&#39;,
-                            url,
-                            headers={&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)},
-                            timeout=12)
+    endpoint = endpoint.replace(&#39;:hub_id&#39;, account_id)
 
-    if resp.status_code == 200:
-        cont = resp.json()
-        return cont[&#39;data&#39;]
+    headers = {}
 
-    if resp.status_code == 401:
-        raise ConnectionError(&#34;Renew authorization token.&#34;)
+    headers.update({&#39;Authorization&#39; : &#34;Bearer {}&#34;.format(token)})
 
-    raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
-                          &#34; and message : {}&#34;.format(resp.content))</code></pre>
+    params = {}
+
+    params.update({&#39;page[limit]&#39; : limit})
+
+    next_page = -1
+    data = []
+
+    while next_page != 0:
+
+        if next_page &gt; 0:
+
+            params.update({&#39;page[number]&#39; : str(next_page)})
+
+            resp = self.http.get(endpoint, headers=headers, params=params)
+
+        else:
+
+            resp = self.http.get(endpoint, headers=headers, params=params)
+
+        if resp.status_code == 200:
+
+            cont = resp.json()
+            data += cont[&#39;data&#39;]
+
+            try:
+                match = re.search(r&#39;page%5Bnumber%5D=(\d+)&#39;, cont[&#39;links&#39;][&#39;next&#39;][&#39;href&#39;])
+
+                if match is not None:
+                    next_page = int(match.groups()[0])
+                else:
+                    return data
+
+            except KeyError:
+
+                return data
+
+        else:
+            if resp.status_code == 401:
+                raise ConnectionError(&#34;Renew authorization token.&#34;)
+
+            raise ConnectionError(&#34;Request failed with code {}&#34;.format(resp.status_code) +
+                                  &#34; and message : {}&#34;.format(resp.content) +
+                                  &#34; for endpoint: {}&#34;.format(endpoint))</code></pre>
 </details>
 </dd>
 </dl>
@@ -543,7 +409,6 @@ Defaults to r'https://developer.api.autodesk.com/project/v1/hubs/:hub_id/project
 <h4><code><a title="PyForge.ForgeProjects.ProjectsApi" href="#PyForge.ForgeProjects.ProjectsApi">ProjectsApi</a></code></h4>
 <ul class="">
 <li><code><a title="PyForge.ForgeProjects.ProjectsApi.get_account_projects" href="#PyForge.ForgeProjects.ProjectsApi.get_account_projects">get_account_projects</a></code></li>
-<li><code><a title="PyForge.ForgeProjects.ProjectsApi.get_hub_projects" href="#PyForge.ForgeProjects.ProjectsApi.get_hub_projects">get_hub_projects</a></code></li>
 </ul>
 </li>
 </ul>
