@@ -51,13 +51,11 @@ class FolderTree():
 
         if project_id is None:
             raise ValueError("Please enter a project id.")
-        else:
-            project_id = "b.{}".format(project_id)
 
         type_filter = 'folders'
 
         folders_api = FoldersApi(token)
-        folder_data, folder_versions = folders_api.get_folder_contents(token, project_id, self.folder['id'], type_filter)
+        folder_data, folder_versions = folders_api.get_folder_contents(project_id, self.folder['id'], type_filter)
 
         children_folders = []
 

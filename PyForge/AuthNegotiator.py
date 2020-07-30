@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to authentication on the Autodesk Forge BIM360 platform."""
-import requests
 from PyForge.ForgeApi import ForgeApi
 
 class OAuth2Negotiator(ForgeApi):
@@ -42,7 +41,7 @@ class OAuth2Negotiator(ForgeApi):
 
         self.endAddress = endAddress
 
-        super().__init__(self, base_url=base_url, timeout=timeout)
+        super().__init__(self, base_url=webAddress, timeout=timeout)
 
     def get_token(self, legs=2):
         """
@@ -61,24 +60,25 @@ class OAuth2Negotiator(ForgeApi):
         """
         if legs == 2:
 
-            method = 'POST'
-            headers = { 'Content-Type' : 'application/x-www-form-urlencoded' }
-            data = { 'client_id' : self.clientId,
-                       'client_secret' : self.clientSecret,
-                       'grant_type' : 'client_credentials',
-                       'scope' : self.scopes }
+            headers = {}
+
+            headers.update({ 'Content-Type' : 'application/x-www-form-urlencoded' })
+
+            data = {}
+
+            data.update({'client_id' : self.clientId})
+            data.update({'client_secret' : self.clientSecret})
+            data.update({'grant_type' : 'client_credentials'})
+            data.update({'scope' : self.scopes})
 
             resp = self.http.post(self.webAddress, headers=headers, data=data)
 
             if resp.status_code == 200:
                 cont = resp.json()
                 return (cont['access_token'], cont['expires_in'])
-            else:
-                if resp.status_code in [429, 500]:
-                    raise ConnectionError("Connection to auth server not " +
-                                          "made, please try again.")
-                else:
-                    raise ConnectionError("Request failed with code {}".format(resp.status_code) +
-                                          " and message : {}".format(resp.content))
+
+            raise ConnectionError("Request failed with code {}".format(resp.status_code) +
+                                  " and message : {}".format(resp.content) +
+                                  " during authentication.")
         else:
             raise NotImplementedError("3-legged authentication has not been implemented.")

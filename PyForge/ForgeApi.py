@@ -15,7 +15,7 @@ class ForgeApi():
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            base_url (str, optional): Base URL for calls to the model derivative API.
+            base_url (str, optional): Base URL for calls to the forge API.
                 Defaults to r'https://developer.api.autodesk.com/'
             timeout (float, optional): Default timeout for API calls. Defaults to 1.
 

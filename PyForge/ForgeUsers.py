@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to users on the Autodesk Forge BIM360 platform."""
-import requests
+from PyForge.ForgeApi import ForgeApi
 
 
-class UsersApi():
+class UsersApi(ForgeApi):
     """This class provides the base API calls for Autodesk BIM360 users."""
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r'https://developer.api.autodesk.com/bim360/admin/v1/',
+                 timeout=1):
         """
-        Initialize the UsersApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the UsersApi class and attach an authentication token for the Autodesk Forge API.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the users API.
+                Defaults to r'https://developer.api.autodesk.com/bim360/admin/v1/'
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
             None.
@@ -19,14 +24,13 @@ class UsersApi():
         """
         self.token = token
 
-    def get_project_users(self, token=None, project_id=None, region='US', accept_language="de", filters={},
+    def get_project_users(self, project_id=None, region='US', accept_language="de", filters={},
                           limit=100, offset=0, sort=[], fields=[],
-                          url=r'https://developer.api.autodesk.com/bim360/admin/v1/projects/:projectId/users'):
+                          endpoint=r'projects/:projectId/users'):
         """
         Send a GET projects/:projectId/users request to the BIM360 API, returns the users assigned to the project.
 
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
             project_id (str, optional): The project id for the BIM360 project. Defaults to None.
             region (str, optional): The BIM360 server region to be adressed, can be US or EMEA. Defaults to US.
             accept_language (str, optional): The language in which the response is to be returned. Defaults to de.
@@ -35,26 +39,28 @@ class UsersApi():
             offset (int, optional): Offset of the response array. Defaults to 0.
             sort (list, optional): List of string field names to sort in ascending order, Prepending a field with - sorts in descending order. Defaults to [].
             fields (list, optional): List of string field names to include in the response array. Defaults to [].
-            url (str, optional):  url endpoint for the GET projects/:projectId/users request.
-                Defaults to r'https://developer.api.autodesk.com/bim360/admin/v1/projects/:projectId/users'
+            endpoint (str, optional):  endpoint for the GET projects/:projectId/users request.
+                Defaults to r'projects/:projectId/users'
 
         Raises:
-            ValueError: If any of token and self.token, project_id are of NoneType.
+            ValueError: If self.token, project_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            list(dict(JsonApiObject)): List of users JsonApi objects in the form of dicts.
         """
-        if (self.token is None and token is None):
-            raise ValueError("Please give a authorization token.")
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError("Please initialise the UsersApi.")
 
         if project_id is None:
             raise ValueError("Please enter a project id.")
 
-        url = url.replace(':projectId', project_id)
+        if project_id.startswith("b."):
+            project_id = project_id[2:]
+
+        endpoint = endpoint.replace(':projectId', project_id)
 
         headers = {}
 
@@ -76,22 +82,7 @@ class UsersApi():
             fields = ",".join(fields)
             params.update({'field' : fields})
 
-        outstanding = True
-        while outstanding:
-            try:
-                resp = requests.request('GET',
-                                        url,
-                                        headers=headers,
-                                        params=params,
-                                        timeout=2.5)
-                outstanding = False
-            except requests.exceptions.ReadTimeout:
-                resp = requests.request('GET',
-                                        url,
-                                        headers=headers,
-                                        params=params,
-                                        timeout=2.5)
-                outstanding = False
+        resp = self.http.get(endpoint, headers=headers, params=params)
 
         if resp.status_code == 200:
             cont = resp.json()['results']
@@ -112,13 +103,15 @@ class UsersApi():
 
                 return cont
             else:
-                print(cont)
+                raise TypeError(f"Invalid response type for endpoint: {endpoint}\n" +
+                                f"with content: {resp.content}")
 
         if resp.status_code == 401:
             raise ConnectionError("Renew authorization token.")
 
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
-                              " and message : {}".format(resp.content))
+                              " and message : {}".format(resp.content) +
+                              " for endpoint: {}".format(endpoint))
 
     def make_filters(self, filters):
         """

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to folders on the Autodesk Forge BIM360 platform."""
 import re
-import requests
 from PyForge.ForgeApi import ForgeApi
 
 
@@ -16,7 +15,7 @@ class FoldersApi(ForgeApi):
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            base_url (str, optional): Base URL for calls to the model derivative API.
+            base_url (str, optional): Base URL for calls to the folders API.
                 Defaults to r'https://developer.api.autodesk.com/data/v1/projects/'
             timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
@@ -169,7 +168,6 @@ class FoldersApi(ForgeApi):
         Send a GET projects/:project_id/folders/:folder_id/search request to the BIM360 API, recursively searching the folder and subfolders for the given search filter. Returns the search results data JsonApi Objects available to the user in the given search.
 
         Args:
-            token (str): Authentication token for Autodesk Forge API. Must be 3-legged with data:search scope requested.
             project_id (str): The project id for the project the folder to be searched is in.
             folder_id (str): The folder id for the folder to be searched.
             search_filter (str, list): The filter(s) to search for.

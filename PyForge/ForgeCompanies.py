@@ -14,8 +14,10 @@ class CompaniesApi(ForgeApi):
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            base_url (str, optional): Base URL for calls to the model derivative API.
+            base_url (str, optional): Base URL for calls to the companies API.
                 Defaults to r'https://developer.api.autodesk.com/hq/v1/accounts/'
+                Which is valid for the US region.
+                For the EU r'https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/' is used.
             timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
@@ -38,11 +40,11 @@ class CompaniesApi(ForgeApi):
             endpoint (str, optional):  endpoint for the GET accounts/:account_id/companies request. Defaults to: r':account_id/companies'
 
         Raises:
-            ValueError: If any of token and self.token, account_id are of NoneType.
+            ValueError: If self.token, account_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            list(dict(JsonApiObject)): List of JsonApi Company objects in the form of dicts.
         """
         try:
             token = self.token
@@ -51,6 +53,9 @@ class CompaniesApi(ForgeApi):
 
         if account_id is None:
             raise ValueError("Please enter a account id.")
+
+        if account_id.startswith("b."):
+            account_id = project_id[2:]
 
         endpoint = endpoint.replace(':account_id', account_id)
 
@@ -86,7 +91,8 @@ class CompaniesApi(ForgeApi):
 
                 return cont
             else:
-                print(cont)
+                raise TypeError(f"Invalid response type for endpoint: {endpoint}\n" +
+                                f"with content: {resp.content}")
 
         if resp.status_code == 401:
             raise ConnectionError("Renew authorization token.")

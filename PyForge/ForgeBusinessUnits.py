@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to business units on the Autodesk Forge BIM360 platform."""
-import requests
 from PyForge.ForgeApi import ForgeApi
 
 
@@ -15,8 +14,10 @@ class BusinessUnitsApi(ForgeApi):
 
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            base_url (str, optional): Base URL for calls to the model derivative API.
+            base_url (str, optional): Base URL for calls to the business unit API.
                 Defaults to r'https://developer.api.autodesk.com/hq/v1/accounts/'
+                Which is valid for the US region.
+                For the EU r'https://developer.api.autodesk.com/hq/v1/regions/eu/accounts/' is used.
             timeout (float, optional): Default timeout for API calls. Defaults to 1.
 
         Returns:
@@ -38,7 +39,7 @@ class BusinessUnitsApi(ForgeApi):
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            list(dict(JsonApiObject)): List of JsonApi Business Unit objects in the form of dicts.
         """
         try:
             token = self.token
@@ -47,6 +48,9 @@ class BusinessUnitsApi(ForgeApi):
 
         if account_id is None:
             raise ValueError("Please enter a account id.")
+
+        if account_id.startswith("b."):
+            account_id = project_id[2:]
 
         endpoint = endpoint.replace(':account_id', account_id)
 

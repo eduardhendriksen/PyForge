@@ -1,45 +1,46 @@
 # -*- coding: utf-8 -*-
 """Module containing classes related to folders on the Autodesk Forge BIM360 platform."""
 import re
-import requests
+from PyForge.ForgeApi import ForgeApi
 
 
-class PermissionApi():
-    """This class provides the base API calls for Autodesk BIM360 folders."""
+class PermissionApi(ForgeApi):
+    """This class provides the base API calls for Autodesk BIM360 folder permissions."""
 
-    def __init__(self, token=None):
+    def __init__(self, token,
+                 base_url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/',
+                 timeout=1):
         """
-        Initialize the PermissionApi class and optionally attach an authentication token for the Autodesk Forge API.
+        Initialize the PermissionApi class and attach an authentication token for the Autodesk Forge API.
         Args:
-            token (str, optional): Authentication token for Autodesk Forge API. Defaults to None.
+            token (str): Authentication token for Autodesk Forge API.
+            base_url (str, optional): Base URL for calls to the model derivative API.
+                Defaults to r'https://developer.api.autodesk.com/bim360/docs/v1/projects/'
+            timeout (float, optional): Default timeout for API calls. Defaults to 1.
         Returns:
             None.
         """
-        self.token = token
+        super().__init__(token=token, base_url=base_url, timeout=timeout)
 
-    def get_folder_permission(self, token, project_id, folder_id,
-                   url=r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions'):
+    def get_folder_permission(self, project_id, folder_id,
+                              endpoint=r':project_id/folders/:folder_id/permissions'):
         """
-        Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns the folder JsonApiObject available to the Autodesk account on the given hub for the given project id.
+        Send a GET projects/:project_id/folders/:folder_id request to the BIM360 API, returns a json list containing the permissions on the folder.
         Args:
-            token (str): Authentication token for Autodesk Forge API.
             project_id (str): The project id for the project the folder is in.
             folder_id (str): The folder id for the folder.
-            url (str, optional): url endpoint for the GET projects/:project_id/folders/:folder_id request.
-                Defaults to r'https://developer.api.autodesk.com/bim360/docs/v1/projects/:project_id/folders/:folder_id/permissions'.
+            endpoint (str, optional): endpoint for the GET projects/:project_id/folders/:folder_id request.
+                Defaults to r':project_id/folders/:folder_id/permissions'.
         Raises:
             ValueError: If any of token and self.token, project_id or folder_id are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
         Returns:
-            dict(JsonApiObject): JsonApi Folder object in the form of a dict.
+            response json object.
         """
-        method = 'GET'
-
-        if (self.token is None and token is None):
-            raise ValueError("Please give a authorization token.")
-
-        if self.token is not None:
+        try:
             token = self.token
+        except AttributeError:
+            raise ValueError("Please initialise the PermissionApi.")
 
         if project_id is None:
             raise ValueError("Please enter a project id.")
@@ -50,13 +51,13 @@ class PermissionApi():
         if folder_id is None:
             raise ValueError("Please enter a folder id.")
 
-        headers = {'Authorization' : "Bearer {}".format(token)}
-        url = url.replace(':project_id', project_id).replace(':folder_id', folder_id)
+        headers = {}
 
-        resp = requests.request(method,
-                                url,
-                                headers=headers,
-                                timeout=12)
+        headers.update({'Authorization' : "Bearer {}".format(token)})
+
+        endpoint = endpoint.replace(':project_id', project_id).replace(':folder_id', folder_id)
+
+        resp = self.http.get(endpoint, headers=headers)
 
         if resp.status_code == 200:
             cont = resp.json()
@@ -69,5 +70,6 @@ class PermissionApi():
             raise ConnectionError("Renew authorization token.")
 
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
-                              " and message : {}".format(resp.content))
+                              " and message : {}".format(resp.content) +
+                              " for endpoint: {}".format(endpoint))
 

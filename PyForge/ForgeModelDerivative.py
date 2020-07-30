@@ -36,11 +36,11 @@ class ModelDerivativeApi(ForgeApi):
             endpoint (str, optional): endpoint for the GET :urn/metadata. Defaults to r':urn/manifest'
 
         Raises:
-            ValueError: If any of token and self.token, urn are of NoneType.
+            ValueError: If self.token, urn are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Manifest JsonApi object in the form of a dict.
         """
         try:
             token = self.token
@@ -89,7 +89,7 @@ class ModelDerivativeApi(ForgeApi):
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            Response object with partial chunked body containing the requested derivative.
         """
         try:
             token = self.token
@@ -138,7 +138,7 @@ class ModelDerivativeApi(ForgeApi):
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Metadata JsonApi object in the form of a dict.
         """
         try:
             token = self.token
@@ -171,7 +171,8 @@ class ModelDerivativeApi(ForgeApi):
                               " and message : {}".format(resp.content) +
                               " for endpoint: {}".format(endpoint))
 
-    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', forceget='true', endpoint=r':urn/metadata/:guid'):
+    def get_object_tree(self, urn=None, guid=None, accept_encoding=None, x_ads_force='true', forceget='true',
+                        endpoint=r':urn/metadata/:guid'):
         """
         Send a GET :urn/metadata/:guid request to the BIM360 API, returns the object tree for the given metadata id (corresponding to a model view) for the model.
 
@@ -183,11 +184,11 @@ class ModelDerivativeApi(ForgeApi):
             endpoint (str, optional): Endpoint for the GET :urn/metadata/:guid. Defaults to r':urn/metadata/:guid'
 
         Raises:
-            ValueError: If any of token and self.token, urn and guid are of NoneType.
+            ValueError: If any of self.token, urn and guid are of NoneType.
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Object tree JsonApi object in the form of a dict.
         """
         try:
             token = self.token
@@ -251,7 +252,7 @@ class ModelDerivativeApi(ForgeApi):
             ConnectionError: Different Connectionerrors based on retrieved ApiErrors from the Forge API.
 
         Returns:
-            None.
+            dict(JsonApiObject): Properties JsonApi object in the form of a dict.
         """
         try:
             token = self.token
