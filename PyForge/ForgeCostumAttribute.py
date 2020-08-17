@@ -18,7 +18,7 @@ class CustomAttributesApi(ForgeApi):
         Returns:
             None.
         """
-        
+
         super().__init__(token=token, base_url=base_url, timeout=timeout)
 
     def get_custom_attribute_definitions(self, project_id, folder_id,
@@ -54,27 +54,25 @@ class CustomAttributesApi(ForgeApi):
         if folder_id is None:
             raise ValueError("Please enter a folder id.")
 
-        
+
         endpoint = endpoint.replace(':project_id', project_id).replace(':folder_id', folder_id)
-        
+
         headers = {}
 
         headers.update({'Authorization' : "Bearer {}".format(token)})
-
-       
 
         resp = self.http.get(endpoint, headers=headers)
 
         if resp.status_code == 200:
             cont = resp.json()
             return cont
-        
+
         if resp.status_code == 400:
             raise ConnectionError(resp.content)
 
         if resp.status_code == 401:
-            raise ConnectionError("Renew authorization token.")  
-        
+            raise ConnectionError("Renew authorization token.")
+
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
                               " and message : {}".format(resp.content) +
                               " for endpoint: {}".format(endpoint))
@@ -86,7 +84,7 @@ class CustomAttributesApi(ForgeApi):
         Send a POST :project_id/versions:batch-get request to the BIM360 API, returns the version batch JsonApiObject available to the Autodesk account on the given hub for the given project id.
         Args:
             token (str): Authentication token for Autodesk Forge API.
-            project_id (str): The project id for the project 
+            project_id (str): The project id for the project
             endpoint (str): endpoint for the POST :project_id/versions:batch-get
                 Defaults to r':project_id/versions:batch-get'.
         Raises:
@@ -108,38 +106,34 @@ class CustomAttributesApi(ForgeApi):
 
         if project_id.startswith("b."):
             project_id = project_id[2:]
- 
-                
+
+
         endpoint = endpoint.replace(':project_id', project_id)
-        
+
         headers = {}
 
         headers.update({'Authorization' : "Bearer {}".format(token)})
-        
+
         headers.update({'Content-Type' : 'application/json'})
-        
+
         data = {}
-        
+
         data.update({"urns" : urns})
-        
-        data = json.dumps(data)            
+
+        data = json.dumps(data)
 
         resp = self.http.post(endpoint, headers=headers, data=data)
 
         if resp.status_code == 200:
             cont = resp.json()
             return cont
-        
+
         if resp.status_code == 400:
             raise ConnectionError(resp.content)
 
         if resp.status_code == 401:
-            raise ConnectionError("Renew authorization token.")  
-        
+            raise ConnectionError("Renew authorization token.")
+
         raise ConnectionError("Request failed with code {}".format(resp.status_code) +
                               " and message : {}".format(resp.content) +
                               " for endpoint: {}".format(endpoint))
-        
-
-
-
